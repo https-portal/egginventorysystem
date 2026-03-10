@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EggDash | Delivery Calendar</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --sidebar: #1e293b;
+            --background: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            margin: 0;
+            display: flex;
+        }
+
+    .sidebar {
+    width: 260px;
+    background: var(--sidebar);
+    color: white;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    box-sizing: border-box; 
+}
+
+.logout-btn {
+    margin-top: auto; 
+    background: #334155;
+    border: none;
+    color: #fca5a5;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 20px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+
+        .sidebar h2 { font-size: 1.5rem; margin-bottom: 2rem; color: #fbbf24; display: flex; align-items: center; gap: 10px; }
+        .nav-link {
+            padding: 12px 15px;
+            color: #cbd5e1;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            width: calc(100% - 260px);
+        }
+
+        .calendar-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tooltip style */
+        .fc-event { cursor: pointer; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
+    
+    <a href="admin-dashboard.html" class="nav-link">
+        <i class="fas fa-th-large"></i> Dashboard
+    </a>
+
+    <a href="inventory.html" class="nav-link active">
+        <i class="fas fa-boxes-stacked"></i> View Inventory
+    </a>
+
+    <a href="sales-report.html" class="nav-link">
+        <i class="fas fa-file-invoice-dollar"></i> Sales Report
+    </a>
+    
+    <a href="admin-calendar.html" class="nav-link">
+        <i class="fas fa-calendar-alt"></i> Delivery Calendar
+    </a>
+    
+    <a href="production.html" class="nav-link">
+        <i class="fas fa-plus-circle"></i> Add Production
+    </a>
+    
+    <a href="admin-map.html" class="nav-link">
+        <i class="fas fa-map-marked-alt"></i> Delivery Map
+    </a>
+
+    <a href="production_report.html" class="nav-link">
+        <i class="fas fa-file-contract"></i> Production Report
+    </a>
+    
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+</nav>
+
+<div class="main-content">
+    <header style="margin-bottom: 2rem;">
+        <h1>Delivery Schedule</h1>
+        <p>Approved reservations that are Pending or Out for Delivery.</p>
+    </header>
+
+    <div class="calendar-container">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<script>
+    // Firebase Config (Same as your dashboard)
+    const firebaseConfig={
+        apiKey:"AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+        authDomain:"egg-inventory-system-10c0b.firebaseapp.com",
+        databaseURL:"https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+        projectId:"egg-inventory-system-10c0b",
+        storageBucket:"egg-inventory-system-10c0b.appspot.com",
+        messagingSenderId:"935350302045",
+        appId:"1:935350302045:web:96ff5e551cdea5b120e4b4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            eventClick: function(info) {
+                alert(`Customer: ${info.event.title}\nStatus: ${info.event.extendedProps.delivery_status}\nSize: ${info.event.extendedProps.size}`);
+            }
+        });
+
+        calendar.render();
+
+        // FETCH DATA 
+        db.ref("reservation").on("value", snapshot => {
+            const events = [];
+            if(snapshot.exists()){
+                const data = snapshot.val();
+                
+                // LOOP 1: Date
+                for(const date in data){
+                    // LOOP 2: Time
+                    for(const time in data[date]){
+                        // LOOP 3: UID 
+                        for(const uid in data[date][time]){
+                            const r = data[date][time][uid];
+
+                            // FILTER: 
+                            if(r.status === "Approved" && r.delivery_status !== "Delivered") {
+                                
+                           
+                                // Priority: delivery_date -> delivery_schedule -> folder date
+                                const rawDate = r.delivery_date || r.delivery_schedule || date;
+
+                                events.push({
+                                    title: `${r.name} (${r.trays} Trays)`,
+                                    start: rawDate,
+                                    backgroundColor: r.delivery_status === "Out for Delivery" ? "#a855f7" : "#4f46e5",
+                                    borderColor: r.delivery_status === "Out for Delivery" ? "#a855f7" : "#4f46e5",
+                                    allDay: true,
+                                    extendedProps: {
+                                        size: r.size,
+                                        trays: r.trays,
+                                        delivery_status: r.delivery_status || "Pending"
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // clearand  -reload 
+            calendar.removeAllEvents();
+            calendar.addEventSource(events);
+        });
+    });
+
+    function logout() {
+        firebase.auth().signOut().then(() => window.location = "admin.html");
+    }
+</script>
+
+</body>
+</html>

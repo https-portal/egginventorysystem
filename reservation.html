@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EggDash | Reserve Now</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --secondary: #0ea5e9;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-dark);
+            padding-bottom: 50px;
+        }
+
+        /* Top Header */
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        /* User Profile Card */
+        .profile-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+        }
+
+        .profile-card p { opacity: 0.9; font-size: 0.9rem; }
+        .profile-card h3 { font-size: 1.1rem; margin-top: 5px; word-break: break-all; }
+
+        /* Form Card */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dark);
+        }
+
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+
+        .field-wrapper { position: relative; display: flex; align-items: center; }
+        .field-wrapper i { position: absolute; left: 15px; color: var(--text-muted); font-size: 0.9rem; }
+        
+        .field-wrapper input, .field-wrapper select {
+            width: 100%;
+            padding: 12px 15px 12px 42px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            outline: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .field-wrapper input:focus, .field-wrapper select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Price Highlight */
+        .price-box {
+            background: var(--primary-light);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0 20px 0;
+            border: 1px dashed var(--primary);
+        }
+
+        .price-box div p { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .price-box div h4 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
+
+        /* Map Styling */
+        #map { height: 220px; width: 100%; border-radius: 15px; margin-bottom: 10px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .address-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover { background: #4338ca; transform: translateY(-2px); }
+
+        .btn-logout {
+            width: 100%;
+            background: transparent;
+            color: #ef4444;
+            border: 2px solid #fee2e2;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .error-msg { color: #ef4444; text-align: center; font-size: 0.85rem; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo"><i class="fas fa-egg"></i> EggDash</div>
+        <i class="fas fa-bell" style="color: var(--text-muted)"></i>
+    </div>
+
+    <div class="container">
+        <div class="profile-card">
+            <p>Welcome back,</p>
+            <h3 id="user-email">Loading user...</h3>
+        </div>
+
+        <div class="card">
+            <div class="section-title"><i class="fas fa-shopping-basket"></i> Order Details</div>
+
+            <div class="input-group">
+                <label>Customer Name</label>
+                <div class="field-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="name" placeholder="Juan Dela Cruz">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Contact Number</label>
+                <div class="field-wrapper">
+                    <i class="fas fa-phone"></i>
+                    <input type="text" id="contact" placeholder="0912 345 6789">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Egg Size</label>
+                <div class="field-wrapper">
+                    <i class="fas fa-layer-group"></i>
+                    <select id="egg-size">
+                        <option value="">Select size</option>
+                    </select>
+                </div>
+            </div>
+<div class="input-group">
+    <label id="unit-label">Quantity (Trays)</label> 
+    <div class="field-wrapper">
+        <i class="fas fa-hashtag"></i>
+        <input type="number" id="tray-count" min="1" placeholder="Quantity">
+    </div>
+</div>
+
+            <div class="price-box">
+                <div>
+                    <p>UNIT PRICE</p>
+                    <h4 id="price-per-tray">₱0</h4>
+                </div>
+                <div style="text-align: right;">
+                    <p>TOTAL AMOUNT</p>
+                    <h4 id="total-price">₱0</h4>
+                </div>
+            </div>
+
+         <div class="input-group">
+    <label>Preferred Delivery Date</label>
+    <div class="field-wrapper">
+        <i class="fas fa-calendar-alt"></i>
+        <input type="date" id="delivery-schedule">
+    </div>
+</div>
+        </div>
+
+        <div class="card">
+            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Delivery Location</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Tap on the map to pin your exact location.</p>
+            
+            <div id="map"></div>
+            
+            <div class="address-text">
+                <i class="fas fa-info-circle"></i> <span id="address-field">Click map to get address</span>
+            </div>
+
+            <input type="hidden" id="location-field">
+
+            <button class="btn-primary" onclick="reserveEggs()">
+                Confirm Reservation <i class="fas fa-check-circle"></i>
+            </button>
+            <div class="error-msg" id="error"></div>
+        </div>
+
+    <button class="btn-logout" onclick="goBack()" style="color: var(--primary); border-color: var(--primary-light);">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+</button>
+    </div>
+
+<script>
+
+const firebaseConfig = {
+    apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+    authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
+    databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+    projectId: "egg-inventory-system-10c0b",
+    storageBucket: "egg-inventory-system-10c0b.appspot.com",
+    messagingSenderId: "935350302045",
+    appId: "1:935350302045:web:96ff5e551cdea5b120e4b4",
+    measurementId: "G-R5ZEYKVXZN"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+let inventoryData = {};
+let selectedLatLng = {lat: 10.3157, lng: 123.8854}; // Default Cebu
+
+// Auth Listener
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('user-email').innerText = user.email;
+        loadInventory();
+    } else {
+
+        window.location = "user-login.html"; 
+    }
+});
+
+function loadInventory() {
+    database.ref('inventory').get().then(snapshot => {
+        if (snapshot.exists()) {
+            inventoryData = snapshot.val();
+            const eggSelect = document.getElementById('egg-size');
+            eggSelect.innerHTML = '<option value="">Select size</option>';
+            
+            for (const key in inventoryData) {
+                const option = document.createElement('option');
+                option.value = key;
+                
+            
+                const unit = key.toLowerCase().includes('cracked') ? 'pc' : 'tray';
+                option.text = `${key.replace('_',' ').toUpperCase()} (₱${inventoryData[key].price}/${unit})`;
+                eggSelect.appendChild(option);
+            }
+        }
+    });
+}
+// Leaflet Map Init
+const map = L.map('map').setView([selectedLatLng.lat, selectedLatLng.lng], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let marker = L.marker([selectedLatLng.lat, selectedLatLng.lng], { draggable: true }).addTo(map);
+
+// Map Event Listeners
+map.on('click', e => updateMapPosition(e.latlng));
+marker.on('dragend', e => updateMapPosition(marker.getLatLng()));
+
+function updateMapPosition(latlng) {
+    selectedLatLng = latlng;
+    marker.setLatLng(latlng);
+    document.getElementById('location-field').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+    updateAddressText(latlng.lat, latlng.lng);
+}
+
+function updateAddressText(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('address-field').innerText = data.display_name || "Address not found";
+        });
+}
+
+// Pricing Logic
+document.getElementById('egg-size').addEventListener('change', calculatePrice);
+document.getElementById('tray-count').addEventListener('input', calculatePrice);
+
+function calculatePrice() {
+    const size = document.getElementById('egg-size').value;
+    const trays = parseInt(document.getElementById('tray-count').value) || 0;
+    let pricePerTray = (size && inventoryData[size]) ? inventoryData[size].price : 0;
+    
+    document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
+    document.getElementById('total-price').innerText = `₱${trays * pricePerTray}`;
+}
+
+function reserveEggs() {
+    const errorEl = document.getElementById('error');
+    const name = document.getElementById('name').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    const size = document.getElementById('egg-size').value;
+    const trays = parseInt(document.getElementById('tray-count').value) || 0;
+const schedule = document.getElementById('delivery-schedule').value; 
+    const address = document.getElementById('address-field').innerText
+
+    // Validation
+    if (!name || !contact || !size || trays <= 0 || !schedule || address.includes("Click map")) {
+        errorEl.innerText = "⚠️ Please complete all details and pin your location.";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+ 
+    const now = new Date();
+    const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS (Firebase safe)
+
+    const pricePerTray = inventoryData[size].price;
+    const totalPrice = trays * pricePerTray;
+
+    database.ref(`reservation/${date}/${time}/${user.uid}`).set({
+        username: user.email,
+        name: name,
+        contact: contact,
+        size: size,
+        trays: trays,
+        price_per_tray: pricePerTray,
+        total_price: totalPrice,
+        delivery_schedule: schedule,
+        location: selectedLatLng,
+        address: address,
+        status: "Pending"
+    }).then(() => {
+        alert("Reservation successful! We will contact you soon.");
+   
+        location.reload(); 
+    }).catch(err => {
+        errorEl.innerText = err.message;
+        errorEl.style.display = "block";
+    });
+}
+
+function logout() { 
+    auth.signOut().then(() => {
+        window.location = "user-login.html";
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up | EggDash</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+:root {
+    --user-primary: #3b82f6;
+    --user-secondary: #0ea5e9;
+    --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-gradient);
+    padding: 20px;
+}
+
+.signup-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.icon-box {
+    width: 70px;
+    height: 70px;
+    background: white;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--user-primary);
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+}
+
+h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+    margin-left: 2px;
+}
+
+.input-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-field i {
+    position: absolute;
+    left: 15px;
+    color: #94a3b8;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 14px 15px 14px 45px;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    outline: none;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    background: #f8fafc;
+}
+
+.input-field input:focus {
+    border-color: var(--user-primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.show-hide {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--user-primary);
+    text-transform: uppercase;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--user-primary), var(--user-secondary));
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    filter: brightness(1.05);
+}
+
+.message-box {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    display: none; /* Hidden by default */
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.footer a {
+    color: var(--user-primary);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+</style>
+</head>
+
+<body>
+
+<div class="signup-card">
+    <div class="icon-box">
+        <i class="fas fa-user-plus"></i>
+    </div>
+
+    <h2>Create Account</h2>
+    <p class="subtitle">Join EggDash to start ordering today</p>
+
+    <div class="input-group">
+        <label>Email Address</label>
+        <div class="input-field">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="you@example.com">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Password</label>
+        <div class="input-field">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="At least 6 characters">
+            <span class="show-hide" onclick="togglePassword()" id="toggleText">Show</span>
+        </div>
+    </div>
+
+    <button id="signupBtn" onclick="createAccount()">
+        <span id="btnText">Create My Account</span>
+        <div class="spinner" id="loader"></div>
+    </button>
+
+    <div class="message-box" id="message"></div>
+
+    <div class="footer">
+        Already have an account? <a href="user-login.html">Login</a>
+    </div>
+</div>
+
+<script>
+// Firebase Config (Keep your credentials)
+const firebaseConfig = {
+  apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+  authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
+  databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+  projectId: "egg-inventory-system-10c0b",
+  storageBucket: "egg-inventory-system-10c0b.appspot.com",
+  messagingSenderId: "935350302045",
+  appId: "1:935350302045:web:96ff5e551cdea5b120e4b4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+
+function togglePassword(){
+    const pass = document.getElementById("password");
+    const text = document.getElementById("toggleText");
+    if(pass.type === "password"){
+        pass.type = "text";
+        text.innerText = "Hide";
+    } else {
+        pass.type = "password";
+        text.innerText = "Show";
+    }
+}
+
+function createAccount(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const msgBox = document.getElementById("message");
+    const btnText = document.getElementById("btnText");
+    const loader = document.getElementById("loader");
+
+    // Reset UI
+    msgBox.style.display = "none";
+
+    if(!email || !password){
+        showStatus("Please fill in all fields.", "#ef4444", "#fef2f2");
+        return;
+    }
+
+    if(password.length < 6){
+        showStatus("Password should be at least 6 characters.", "#ef4444", "#fef2f2");
+        return;
+    }
+
+    // Start Loading
+    btnText.innerText = "Creating Account...";
+    loader.style.display = "block";
+    document.getElementById("signupBtn").disabled = true;
+
+    auth.createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+        const uid = userCredential.user.uid;
+        // Save user to DB
+        return database.ref('user/' + uid).set({
+            email: email,
+            usertype: "user",
+            createdAt: new Date().toISOString()
+        });
+    })
+    .then(() => {
+        showStatus("Success! Redirecting to login...", "#10b981", "#ecfdf5");
+        setTimeout(() => { window.location = "user-login.html"; }, 1800);
+    })
+    .catch((error) => {
+        showStatus(error.message, "#ef4444", "#fef2f2");
+        btnText.innerText = "Create My Account";
+        loader.style.display = "none";
+        document.getElementById("signupBtn").disabled = false;
+    });
+}
+
+function showStatus(text, color, bg) {
+    const msgBox = document.getElementById("message");
+    msgBox.innerText = text;
+    msgBox.style.color = color;
+    msgBox.style.backgroundColor = bg;
+    msgBox.style.display = "block";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EggDash | Admin Access</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-gradient);
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            padding: 45px 35px;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .brand-icon {
+            width: 65px;
+            height: 65px;
+            background: #fef3c7;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: #d97706;
+            font-size: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            outline: none;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .toggle-pass {
+            position: absolute;
+            right: 14px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
+        button:active { transform: translateY(0); }
+
+        .error-box {
+            background: #fef2f2;
+            color: var(--error);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none; /* Hidden by default */
+            border: 1px solid #fee2e2;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ffffff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-card">
+    <div class="brand-icon">
+        <i class="fas fa-shield-halved"></i>
+    </div>
+
+    <h2>Admin Portal</h2>
+    <p class="subtitle">Secure access to EggDash system</p>
+
+    <div class="input-group">
+        <label>Administrator Email</label>
+        <div class="input-wrapper">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="admin@eggdash.com">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Security Password</label>
+        <div class="input-wrapper">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="••••••••">
+            <i class="fas fa-eye toggle-pass" onclick="togglePassword()" id="eye-icon"></i>
+        </div>
+    </div>
+
+    <button id="loginBtn" onclick="login()">
+        <span id="btnText">Log In to Dashboard</span>
+        <div class="spinner" id="loader"></div>
+    </button>
+
+    <div class="error-box" id="error"></div>
+
+    <div class="footer">
+        &copy; 2026 EggDash Inventory Solutions
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+  authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
+  databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+  projectId: "egg-inventory-system-10c0b",
+  storageBucket: "egg-inventory-system-10c0b.appspot.com",
+  messagingSenderId: "935350302045",
+  appId: "1:935350302045:web:96ff5e551cdea5b120e4b4"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+
+function togglePassword(){
+    const passInput = document.getElementById("password");
+    const eyeIcon = document.getElementById("eye-icon");
+    if(passInput.type === "password"){
+        passInput.type = "text";
+        eyeIcon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        passInput.type = "password";
+        eyeIcon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+}
+
+function login(){
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const errorBox = document.getElementById("error");
+    const btnText = document.getElementById("btnText");
+    const loader = document.getElementById("loader");
+
+    // Reset UI
+    errorBox.style.display = "none";
+    
+    if(!email || !password){
+        showError("Please enter both email and password.");
+        return;
+    }
+
+    // Show Loading
+    btnText.innerText = "Authenticating...";
+    loader.style.display = "block";
+
+    auth.signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+        const uid = userCredential.user.uid;
+        return database.ref('user/' + uid).get();
+    })
+    .then((snapshot) => {
+        if(snapshot.exists() && snapshot.val().usertype === "admin") {
+            window.location = "admin-dashboard.html";
+        } else {
+            showError("Access Denied: You do not have admin privileges.");
+            auth.signOut();
+            resetButton();
+        }
+    })
+    .catch((err) => {
+        showError("Invalid credentials. Please try again.");
+        console.error(err);
+        resetButton();
+    });
+}
+
+function showError(msg) {
+    const errorBox = document.getElementById("error");
+    errorBox.innerText = msg;
+    errorBox.style.display = "block";
+}
+
+function resetButton() {
+    document.getElementById("btnText").innerText = "Log In to Dashboard";
+    document.getElementById("loader").style.display = "none";
+}
+</script>
+
+</body>
+</html>
