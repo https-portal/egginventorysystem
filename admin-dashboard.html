@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Admin Reservation</title>
+    <title>Bakafa | Admin Reservation</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,40 +31,37 @@
             margin: 0;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar);
+            color: white;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            box-sizing: border-box; 
+        }
 
-.sidebar {
-    width: 260px;
-    background: var(--sidebar);
-    color: white;
-    padding: 2rem 1rem;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    height: 100vh;
-    box-sizing: border-box; 
-}
-
-.logout-btn {
-    margin-top: auto;
-    background: #334155;
-    border: none;
-    color: #fca5a5;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-bottom: 20px; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+        /* Mobile Sidebar State */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
 
         .sidebar h2 {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin-bottom: 2rem;
             display: flex;
             align-items: center;
@@ -98,33 +95,59 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         /* --- Main Content --- */
         .main-content {
+            flex: 1;
             margin-left: 260px;
-            padding: 2rem;
-            width: calc(100% - 260px);
+            padding: 1.5rem;
+            width: 100%;
+            transition: margin 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            gap: 10px;
+        }
+
+        .mobile-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--sidebar);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-toggle { display: block; }
+            header h1 { font-size: 1.2rem; }
         }
 
         /* --- Stats Cards --- */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .stat-card {
             background: var(--card);
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-bottom: 4px solid var(--primary);
@@ -132,15 +155,33 @@
 
         .stat-card h3 {
             margin: 0;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             color: var(--secondary);
         }
 
         .stat-card .value {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             margin-top: 0.5rem;
+        }
+
+        /* --- Sales Banner --- */
+        .sales-banner {
+            background: #1e293b;
+            color: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .sales-amount { font-size: 1.8rem !important; width: 100%; }
         }
 
         /* --- Controls --- */
@@ -149,16 +190,14 @@
             padding: 1rem;
             border-radius: 12px;
             display: flex;
-            gap: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
             margin-bottom: 1.5rem;
-            align-items: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .search-wrapper { position: relative; flex: 1; }
+        .search-wrapper { position: relative; flex: 1; min-width: 200px; }
         .search-wrapper i { position: absolute; left: 12px; top: 12px; color: #94a3b8; }
-
-        
         
         input, select {
             padding: 10px 10px 10px 35px;
@@ -166,6 +205,7 @@
             border-radius: 8px;
             width: 100%;
             outline: none;
+            box-sizing: border-box;
         }
 
         .map-trigger {
@@ -175,10 +215,14 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            white-space: nowrap;
+            width: 100%; /* Mobile full width */
         }
 
-        /* --- Table Styling --- */
+        @media (min-width: 769px) {
+            .map-trigger { width: auto; }
+        }
+
+        /* --- Table/Card Toggle for Mobile --- */
         .table-container {
             background: white;
             border-radius: 12px;
@@ -186,160 +230,115 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #e2e8f0; margin-bottom: 1rem; border-radius: 12px; padding: 10px; }
+            td { border: none; position: relative; padding-left: 50% !important; text-align: right; }
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+                color: var(--secondary);
+            }
+            .action-btns { text-align: center; padding-left: 0 !important; }
         }
 
-        th {
-            background: #f1f5f9;
-            padding: 15px;
-            text-align: left;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--secondary);
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--secondary); }
+        td { padding: 15px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
 
-        td {
-            padding: 15px;
-            border-top: 1px solid #f1f5f9;
-            font-size: 0.9rem;
-        }
-
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 99px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
+        .badge { padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
         .bg-pending { background: #fef3c7; color: #92400e; }
         .bg-approved { background: #dcfce7; color: #166534; }
         .bg-rejected { background: #fee2e2; color: #991b1b; }
 
-        .action-btns button {
-            padding: 6px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+        .action-btns button { padding: 8px; border-radius: 6px; border: none; cursor: pointer; margin: 2px; }
         .btn-approve { color: var(--success); background: #f0fdf4; }
         .btn-reject { color: var(--danger); background: #fef2f2; }
         .btn-map { color: var(--primary); background: #eef2ff; }
 
-
-
-      
-    .sales-banner {
-        background: #1e293b;
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-    .sales-info h3 { margin: 0; font-size: 1rem; color: #94a3b8; }
-    .sales-info p { margin: 5px 0 0 0; opacity: 0.8; font-size: 0.8rem; }
-    .sales-amount { font-size: 2.5rem; font-weight: 700; color: #22c55e; }
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .sidebar-overlay.active { display: block; }
 
     </style>
 </head>
 
 <body>
-<nav class="sidebar">
-    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
-    
-    <a href="admin-dashboard.html" class="nav-link">
-        <i class="fas fa-th-large"></i> Dashboard
-    </a>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <a href="inventory.html" class="nav-link active">
-        <i class="fas fa-boxes-stacked"></i> View Inventory
-    </a>
-
-    <a href="sales-report.html" class="nav-link">
-        <i class="fas fa-file-invoice-dollar"></i> Sales Report
-    </a>
-    
-    <a href="admin-calendar.html" class="nav-link">
-        <i class="fas fa-calendar-alt"></i> Delivery Calendar
-    </a>
-    
-    <a href="production.html" class="nav-link">
-        <i class="fas fa-plus-circle"></i> Add Production
-    </a>
-    
-    <a href="admin-map.html" class="nav-link">
-        <i class="fas fa-map-marked-alt"></i> Delivery Map
-    </a>
-
-    <a href="production_report.html" class="nav-link">
-        <i class="fas fa-file-contract"></i> Production Report
-    </a>
-    
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
-</nav>
-
+    <nav class="sidebar" id="sidebar">
+        <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
+        
+        <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+        <a href="inventory.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+        <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+        <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+        <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
+        <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+        <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
+        
+        <button class="logout-btn" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </nav>
 
     <div class="main-content">
         <header>
-            <h1>Reservation Overview</h1>
-            <div id="date-display"></div>
+            <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+            <h1>Reservations</h1>
+            <small id="date-display" style="display: block; font-size: 0.7rem; color: var(--secondary)"></small>
         </header>
 
- 
-<div class="stats-grid">
-    <div class="stat-card" style="border-color: var(--primary);">
-        <h3>Total Orders</h3>
-        <div class="value" id="total">0</div>
-    </div>
-    <div class="stat-card" style="border-color: var(--warning);">
-        <h3>Pending</h3>
-        <div class="value" id="pending">0</div>
-    </div>
-    <div class="stat-card" style="border-color: #a855f7;">
-        <h3>Out for Delivery</h3>
-        <div class="value" id="out-for-delivery">0</div>
-    </div>
-    <div class="stat-card" style="border-color: var(--success);">
-        <h3>Delivered</h3>
-        <div class="value" id="delivered">0</div>
-    </div>
-</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total</h3>
+                <div class="value" id="total">0</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--warning);">
+                <h3>Pending</h3>
+                <div class="value" id="pending">0</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--success);">
+                <h3>Delivered</h3>
+                <div class="value" id="delivered">0</div>
+            </div>
+        </div>
 
-<div class="sales-banner">
-    <div class="sales-info">
-        <h3>Total  Target Sales Generated</h3>
-        <p>Overall revenue from approved orders</p>
-    </div>
-    <div class="sales-amount" id="sales">₱0</div>
-</div>
+        <div class="sales-banner">
+            <div class="sales-info">
+                <h3>Target Sales</h3>
+                <p>Revenue from approved orders</p>
+            </div>
+            <div class="sales-amount" id="sales" style="font-size: 2.2rem; font-weight: 700; color: #22c55e;">₱0</div>
+        </div>
 
-
-<div style="position: relative; width: 200px;">
-    <input type="date" id="date-filter" style="padding: 10px; padding-left: 10px;">
-</div>
         <div class="toolbar">
+            <div style="width: 100%;">
+                <input type="date" id="date-filter">
+            </div>
             <div class="search-wrapper">
                 <i class="fas fa-search"></i>
-                <input type="text" id="search" placeholder="Search by name or email...">
+                <input type="text" id="search" placeholder="Search customer...">
             </div>
-
-            
-
-            <select id="filter" style="width: 200px;">
+            <select id="filter" style="flex: 1; min-width: 150px;">
                 <option value="all">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
             </select>
-            <button class="map-trigger" onclick="openMap()">Full Screen Map</button>
+            <button class="map-trigger" onclick="openMap()">View Map</button>
         </div>
 
         <div class="table-container">
@@ -351,7 +350,7 @@
                         <th>Trays</th>
                         <th>Total</th>
                         <th>Status</th>
-                        <th>Delivery Schedule</th>
+                        <th>Schedule</th>
                         <th>Delivery</th>
                         <th>Actions</th>
                     </tr>
@@ -362,7 +361,12 @@
     </div>
 
     <script>
-     
+        // Toggle Sidebar Function
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
         const firebaseConfig={
             apiKey:"AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
             authDomain:"egg-inventory-system-10c0b.firebaseapp.com",
@@ -386,7 +390,7 @@
         function loadReservations(){
             db.ref("reservation").on("value",snapshot=>{
                 reservations=[];
-                let total=0,pending=0,approved=0,rejected=0,sales=0,delivered=0,outForDelivery=0;
+                let total=0,pending=0,sales=0,delivered=0,outForDelivery=0;
 
                 if(snapshot.exists()){
                     const data=snapshot.val();
@@ -398,19 +402,16 @@
                                 reservations.push({date,time,uid,...r});
                                 total++;
                                 if(r.status==="Pending") pending++;
-                                if(r.status==="Approved"){ approved++; sales+=r.total_price; }
-                                if(r.status==="Rejected") rejected++;
+                                if(r.status==="Approved"){ sales+=r.total_price; }
                                 if(r.delivery_status === "Delivered") delivered++;
                                 if(r.delivery_status === "Out for Delivery") outForDelivery++;
                             }
                 }
 
-               
-document.getElementById("total").innerText = total;
-document.getElementById("pending").innerText = pending;
-document.getElementById("out-for-delivery").innerText = outForDelivery;
-document.getElementById("delivered").innerText = delivered; 
-document.getElementById("sales").innerText = "₱" + sales.toLocaleString(); 
+                document.getElementById("total").innerText = total;
+                document.getElementById("pending").innerText = pending;
+                document.getElementById("delivered").innerText = delivered; 
+                document.getElementById("sales").innerText = "₱" + sales.toLocaleString(); 
                 renderTable();
             });
         }
@@ -422,109 +423,59 @@ document.getElementById("sales").innerText = "₱" + sales.toLocaleString();
             const dateFilter = document.getElementById("date-filter").value;
             body.innerHTML="";
 
-         reservations.forEach(r=>{
-
-
-            const resDate = r.date; 
-        if(dateFilter && resDate !== dateFilter) return; 
-
-    if(filter!=="all" && r.status!==filter) return;
-        if(!r.name.toLowerCase().includes(search) && !r.username.toLowerCase().includes(search)) return;
+            reservations.forEach(r=>{
+                if(dateFilter && r.date !== dateFilter) return; 
+                if(filter!=="all" && r.status!==filter) return;
+                if(!r.name.toLowerCase().includes(search)) return;
 
                 const row=document.createElement("tr");
                 row.innerHTML=`
-                    <td>
+                    <td data-label="Customer">
                         <strong>${r.name}</strong><br>
-                        <small style="color:var(--secondary)">${r.contact}</small>
+                        <small>${r.contact}</small>
                     </td>
-                    <td>${r.size} Egg</td>
-                    <td>${r.trays}</td>
-                    <td><strong>₱${r.total_price}</strong></td>
-                    <td><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
-                                           <td>
-    <span class="badge" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">
-        <i class="far fa-calendar-alt"></i> ${r.delivery_date || r.delivery_schedule}
-    </span>
-</td>
-                    <td>
-                        <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)" style="padding: 5px; font-size: 12px;">
+                    <td data-label="Product">${r.size}</td>
+                    <td data-label="Trays">${r.trays}</td>
+                    <td data-label="Total">₱${r.total_price}</td>
+                    <td data-label="Status"><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
+                    <td data-label="Schedule">${r.delivery_date || r.delivery_schedule}</td>
+                    <td data-label="Delivery">
+                        <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)">
                             <option value="Pending" ${r.delivery_status==="Pending"?"selected":""}>Pending</option>
-                            <option value="Out for Delivery" ${r.delivery_status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+                            <option value="Out for Delivery" ${r.delivery_status==="Out for Delivery"?"selected":""}>Out</option>
                             <option value="Delivered" ${r.delivery_status==="Delivered"?"selected":""}>Delivered</option>
                         </select>
                     </td>
-
-
                     <td class="action-btns">
-                        <button class="btn-map" onclick="viewMap(${r.location.lat},${r.location.lng})" title="View Map"><i class="fas fa-location-dot"></i></button>
-                        <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})" title="Approve"><i class="fas fa-check-circle"></i></button>
-                        <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')" title="Reject"><i class="fas fa-times-circle"></i></button>
+                        <button class="btn-map" onclick="viewMap(${r.location.lat},${r.location.lng})"><i class="fas fa-location-dot"></i></button>
+                        <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})"><i class="fas fa-check"></i></button>
+                        <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 body.appendChild(row);
             });
         }
 
-      
-  function approve(date, time, uid, size, quantity) {
- 
-    const isCracked = size.toLowerCase().includes('cracked');
-    const multiplier = isCracked ? 1 : 24;
-    const totalToDeduct = quantity * multiplier;
-
-    const stockRef = db.ref(`inventory/${size}/quantity`);
-    const resRef = db.ref(`reservation/${date}/${time}/${uid}`);
-
-   
-    stockRef.transaction((currentStock) => {
-        if (currentStock === null) return currentStock;
-
-        if (currentStock < totalToDeduct) {
-            console.error("Inadequate stock: " + currentStock);
-            return; 
-        }
-
-        return currentStock - totalToDeduct;
-    }, (error, committed, snapshot) => {
-        if (error) {
-            alert("System Error Try Again");
-        } else if (!committed) {
-            const unitType = isCracked ? "pieces" : "trays";
-            alert(`Insufficient Stock ${snapshot.val()} left.`);
-        } else {
-            
-            resRef.update({ 
-                status: "Approved",
-                deducted_pieces: totalToDeduct,
-                unit_type: isCracked ? "Pieces" : "Trays"
-            }).then(() => {
-                const message = isCracked 
-                    ? `Approved! ${totalToDeduct} individual deducted are less .` 
-                    : `Approved! ${quantity} trays (${totalToDeduct} pieces) are deducted.`;
-                alert(message);
+        function approve(date, time, uid, size, quantity) {
+            const isCracked = size.toLowerCase().includes('cracked');
+            const totalToDeduct = isCracked ? quantity : quantity * 24;
+            db.ref(`inventory/${size}/quantity`).transaction(c => c >= totalToDeduct ? c - totalToDeduct : undefined, (err, comm) => {
+                if(comm) db.ref(`reservation/${date}/${time}/${uid}`).update({status:"Approved"});
+                else alert("Insufficient stock!");
             });
         }
-    });
-}
 
-        function reject(date,time,uid){ db.ref(`reservation/${date}/${time}/${uid}`).update({status:"Rejected"}); }
-        function updateDeliveryStatus(date,time,uid,value){ db.ref(`reservation/${date}/${time}/${uid}`).update({delivery_status:value}); }
-        function openMap(){ window.open("admin-map.html"); }
+        function reject(date,time,uid){ if(confirm("Reject this?")) db.ref(`reservation/${date}/${time}/${uid}`).update({status:"Rejected"}); }
+        function updateDeliveryStatus(date,time,uid,v){ db.ref(`reservation/${date}/${time}/${uid}`).update({delivery_status:v}); }
+        function openMap(){ window.location.href="admin-map.html"; }
         function viewMap(lat,lng){ window.open(`https://www.google.com/maps?q=${lat},${lng}`); }
+        function logout(){ auth.signOut().then(()=>window.location="admin.html"); }
+
         document.getElementById("search").addEventListener("input",renderTable);
         document.getElementById("filter").addEventListener("change",renderTable);
-        function logout(){ auth.signOut().then(()=>window.location="admin.html"); }
-        
-        
-        document.getElementById("date-display").innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('date-filter').value = today;
-
-
-document.getElementById('date-filter').addEventListener('change', renderTable);
-
+        document.getElementById("date-filter").addEventListener("change", renderTable);
+        document.getElementById("date-display").innerText = new Date().toDateString();
+        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
     </script>
 </body>
 </html>

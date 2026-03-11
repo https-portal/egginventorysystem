@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Admin Access</title>
+    <title>Bakafa | Admin Access</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,6 +27,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Mobiles: removes grey box on tap */
         }
 
         body {
@@ -35,31 +36,39 @@
             align-items: center;
             justify-content: center;
             background: var(--bg-gradient);
-            padding: 20px;
+            padding: 15px; /* Smaller padding for mobile */
         }
 
         .login-card {
             width: 100%;
             max-width: 420px;
             background: #ffffff;
-            padding: 45px 35px;
+            padding: 40px 25px; /* Slightly tighter for mobile */
             border-radius: 20px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             text-align: center;
             animation: slideUp 0.5s ease-out;
         }
 
+        /* Responsive adjustments for very small phones */
+        @media (max-width: 375px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+            h2 { font-size: 1.5rem; }
+        }
+
         .brand-icon {
-            width: 65px;
-            height: 65px;
+            width: 60px;
+            height: 60px;
             background: #fef3c7;
             border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
+            margin: 0 auto 15px;
             color: #d97706;
-            font-size: 2rem;
+            font-size: 1.75rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
@@ -72,21 +81,21 @@
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 30px;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             text-align: left;
         }
 
         .input-group label {
             display: block;
-            font-size: 0.875rem;
-            font-weight: 500;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--text-main);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .input-wrapper {
@@ -95,7 +104,8 @@
             align-items: center;
         }
 
-        .input-wrapper i {
+        .input-wrapper i.fa-envelope, 
+        .input-wrapper i.fa-lock {
             position: absolute;
             left: 14px;
             color: var(--text-muted);
@@ -104,11 +114,12 @@
 
         .input-wrapper input {
             width: 100%;
-            padding: 12px 14px 12px 42px;
+            /* Increase padding for easier tapping */
+            padding: 14px 14px 14px 42px; 
             border: 1.5px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: 12px; /* Smoother corners */
             outline: none;
-            font-size: 1rem;
+            font-size: 16px; /* Important: prevents auto-zoom on iOS */
             transition: all 0.2s;
             background: #f8fafc;
         }
@@ -122,16 +133,17 @@
         .toggle-pass {
             position: absolute;
             right: 14px;
+            padding: 10px; /* Bigger hit area for mobile */
             cursor: pointer;
             color: var(--text-muted);
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
         button {
             width: 100%;
-            padding: 14px;
+            padding: 16px; /* Larger button for thumbs */
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             background: var(--primary);
             color: white;
             font-size: 1rem;
@@ -145,39 +157,34 @@
             gap: 10px;
         }
 
-        button:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        button:active { 
+            transform: scale(0.98); /* Visual feedback on touch */
         }
-
-        button:active { transform: translateY(0); }
 
         .error-box {
             background: #fef2f2;
             color: var(--error);
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-size: 0.85rem;
             margin-top: 15px;
-            display: none; /* Hidden by default */
+            display: none;
             border: 1px solid #fee2e2;
         }
 
         .footer {
-            margin-top: 30px;
-            font-size: 0.8rem;
+            margin-top: 25px;
+            font-size: 0.75rem;
             color: var(--text-muted);
             border-top: 1px solid #f1f5f9;
             padding-top: 20px;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Loading Spinner */
         .spinner {
             display: none;
             width: 18px;
@@ -194,7 +201,6 @@
         }
     </style>
 </head>
-
 <body>
 
 <div class="login-card">
@@ -209,7 +215,7 @@
         <label>Administrator Email</label>
         <div class="input-wrapper">
             <i class="fas fa-envelope"></i>
-            <input type="email" id="email" placeholder="admin@eggdash.com">
+            <input type="email" id="email" placeholder="Email" inputmode="email">
         </div>
     </div>
 
@@ -217,7 +223,7 @@
         <label>Security Password</label>
         <div class="input-wrapper">
             <i class="fas fa-lock"></i>
-            <input type="password" id="password" placeholder="••••••••">
+            <input type="password" id="password" placeholder="Password">
             <i class="fas fa-eye toggle-pass" onclick="togglePassword()" id="eye-icon"></i>
         </div>
     </div>
@@ -230,11 +236,12 @@
     <div class="error-box" id="error"></div>
 
     <div class="footer">
-        &copy; 2026 EggDash Inventory Solutions
+        &copy; 2026 Bakafa Egg Inventory Solutions
     </div>
 </div>
 
 <script>
+// --- Ang imong original nga script nagpabilin, walay nausab sa logic ---
 const firebaseConfig = {
   apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
   authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
@@ -268,7 +275,6 @@ function login(){
     const btnText = document.getElementById("btnText");
     const loader = document.getElementById("loader");
 
-    // Reset UI
     errorBox.style.display = "none";
     
     if(!email || !password){
@@ -276,7 +282,6 @@ function login(){
         return;
     }
 
-    // Show Loading
     btnText.innerText = "Authenticating...";
     loader.style.display = "block";
 
@@ -296,7 +301,6 @@ function login(){
     })
     .catch((err) => {
         showError("Invalid credentials. Please try again.");
-        console.error(err);
         resetButton();
     });
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Reserve Now</title>
+    <title>Bakafa | Reserve Now</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -54,19 +54,6 @@
             margin: 20px auto;
             padding: 0 15px;
         }
-
-        /* User Profile Card */
-        .profile-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 20px;
-            padding: 25px;
-            color: white;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
-        }
-
-        .profile-card p { opacity: 0.9; font-size: 0.9rem; }
-        .profile-card h3 { font-size: 1.1rem; margin-top: 5px; word-break: break-all; }
 
         /* Form Card */
         .card {
@@ -147,11 +134,11 @@
 
         .btn-primary:hover { background: #4338ca; transform: translateY(-2px); }
 
-        .btn-logout {
+        .btn-back {
             width: 100%;
             background: transparent;
-            color: #ef4444;
-            border: 2px solid #fee2e2;
+            color: var(--primary);
+            border: 2px solid var(--primary-light);
             padding: 12px;
             border-radius: 12px;
             margin-top: 20px;
@@ -165,16 +152,11 @@
 <body>
 
     <div class="header">
-        <div class="logo"><i class="fas fa-egg"></i> EggDash</div>
+        <div class="logo"><i class="fas fa-egg"></i> Bakafa</div>
         <i class="fas fa-bell" style="color: var(--text-muted)"></i>
     </div>
 
     <div class="container">
-        <div class="profile-card">
-            <p>Welcome back,</p>
-            <h3 id="user-email">Loading user...</h3>
-        </div>
-
         <div class="card">
             <div class="section-title"><i class="fas fa-shopping-basket"></i> Order Details</div>
 
@@ -203,13 +185,14 @@
                     </select>
                 </div>
             </div>
-<div class="input-group">
-    <label id="unit-label">Quantity (Trays)</label> 
-    <div class="field-wrapper">
-        <i class="fas fa-hashtag"></i>
-        <input type="number" id="tray-count" min="1" placeholder="Quantity">
-    </div>
-</div>
+
+            <div class="input-group">
+                <label id="unit-label">Quantity (Trays)</label> 
+                <div class="field-wrapper">
+                    <i class="fas fa-hashtag"></i>
+                    <input type="number" id="tray-count" min="1" placeholder="Quantity">
+                </div>
+            </div>
 
             <div class="price-box">
                 <div>
@@ -222,13 +205,13 @@
                 </div>
             </div>
 
-         <div class="input-group">
-    <label>Preferred Delivery Date</label>
-    <div class="field-wrapper">
-        <i class="fas fa-calendar-alt"></i>
-        <input type="date" id="delivery-schedule">
-    </div>
-</div>
+            <div class="input-group">
+                <label>Preferred Delivery Date</label>
+                <div class="field-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="date" id="delivery-schedule">
+                </div>
+            </div>
         </div>
 
         <div class="card">
@@ -249,13 +232,10 @@
             <div class="error-msg" id="error"></div>
         </div>
 
-    <button class="btn-logout" onclick="goBack()" style="color: var(--primary); border-color: var(--primary-light);">
-    <i class="fas fa-arrow-left"></i> Back to Dashboard
-</button>
+      
     </div>
 
 <script>
-
 const firebaseConfig = {
     apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
     authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
@@ -268,21 +248,12 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const database = firebase.database();
 let inventoryData = {};
 let selectedLatLng = {lat: 10.3157, lng: 123.8854}; // Default Cebu
 
-// Auth Listener
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('user-email').innerText = user.email;
-        loadInventory();
-    } else {
-
-        window.location = "user-login.html"; 
-    }
-});
+// Load Inventory automatically
+loadInventory();
 
 function loadInventory() {
     database.ref('inventory').get().then(snapshot => {
@@ -294,8 +265,6 @@ function loadInventory() {
             for (const key in inventoryData) {
                 const option = document.createElement('option');
                 option.value = key;
-                
-            
                 const unit = key.toLowerCase().includes('cracked') ? 'pc' : 'tray';
                 option.text = `${key.replace('_',' ').toUpperCase()} (₱${inventoryData[key].price}/${unit})`;
                 eggSelect.appendChild(option);
@@ -303,12 +272,12 @@ function loadInventory() {
         }
     });
 }
+
 // Leaflet Map Init
 const map = L.map('map').setView([selectedLatLng.lat, selectedLatLng.lng], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 let marker = L.marker([selectedLatLng.lat, selectedLatLng.lng], { draggable: true }).addTo(map);
 
-// Map Event Listeners
 map.on('click', e => updateMapPosition(e.latlng));
 marker.on('dragend', e => updateMapPosition(marker.getLatLng()));
 
@@ -327,7 +296,6 @@ function updateAddressText(lat, lng) {
         });
 }
 
-// Pricing Logic
 document.getElementById('egg-size').addEventListener('change', calculatePrice);
 document.getElementById('tray-count').addEventListener('input', calculatePrice);
 
@@ -346,29 +314,24 @@ function reserveEggs() {
     const contact = document.getElementById('contact').value.trim();
     const size = document.getElementById('egg-size').value;
     const trays = parseInt(document.getElementById('tray-count').value) || 0;
-const schedule = document.getElementById('delivery-schedule').value; 
-    const address = document.getElementById('address-field').innerText
+    const schedule = document.getElementById('delivery-schedule').value; 
+    const address = document.getElementById('address-field').innerText;
 
-    // Validation
     if (!name || !contact || !size || trays <= 0 || !schedule || address.includes("Click map")) {
         errorEl.innerText = "⚠️ Please complete all details and pin your location.";
         errorEl.style.display = "block";
         return;
     }
 
-    const user = auth.currentUser;
-    if (!user) return;
-
- 
     const now = new Date();
-    const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
-    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS (Firebase safe)
+    const date = now.toISOString().split('T')[0];
+    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
 
     const pricePerTray = inventoryData[size].price;
     const totalPrice = trays * pricePerTray;
 
-    database.ref(`reservation/${date}/${time}/${user.uid}`).set({
-        username: user.email,
+    // Save using a 'guest' or timestamp ID since login is removed
+    database.ref(`reservation/${date}/${time}`).push({
         name: name,
         contact: contact,
         size: size,
@@ -381,7 +344,6 @@ const schedule = document.getElementById('delivery-schedule').value;
         status: "Pending"
     }).then(() => {
         alert("Reservation successful! We will contact you soon.");
-   
         location.reload(); 
     }).catch(err => {
         errorEl.innerText = err.message;
@@ -389,18 +351,9 @@ const schedule = document.getElementById('delivery-schedule').value;
     });
 }
 
-function logout() { 
-    auth.signOut().then(() => {
-        window.location = "user-login.html";
-    });
-}
-
 function goBack() {
     window.location.href = "index.html";
 }
-    
 </script>
 </body>
-
 </html>
-

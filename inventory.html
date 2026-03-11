@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | View Inventory</title>
+    <title>Bakafa | View Inventory</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,21 +24,25 @@
             --card: #ffffff;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--background); margin: 0; display: flex; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background); margin: 0; display: flex; min-height: 100vh; overflow-x: hidden; }
 
         /* --- Sidebar --- */
-        .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 2rem 1rem; display: flex; flex-direction: column; position: fixed; height: 100vh; box-sizing: border-box; z-index: 100; }
-        .sidebar h2 { font-size: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 10px; color: #fbbf24; }
-        .nav-link { padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 8px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; transition: 0.3s; }
+        .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 2rem 1rem; display: flex; flex-direction: column; position: fixed; height: 100vh; left: 0; transition: transform 0.3s ease; z-index: 1001; box-sizing: border-box; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } }
+        .sidebar h2 { font-size: 1.25rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 10px; color: #fbbf24; }
+        .nav-link { padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
         .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
         .logout-btn { margin-top: auto; background: #334155; border: none; color: #fca5a5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         /* --- Main Content --- */
-        .main-content { margin-left: 260px; padding: 2rem; width: calc(100% - 260px); }
-        header { margin-bottom: 2rem; }
+        .main-content { flex: 1; margin-left: 260px; padding: 1.5rem; width: 100%; transition: margin 0.3s ease; box-sizing: border-box; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; padding: 1rem; } }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 10px; }
+        .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--sidebar); }
+        @media (max-width: 768px) { .mobile-toggle { display: block; } }
 
         /* --- Inventory Grid --- */
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .inventory-card { background: var(--card); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); position: relative; border: 1px solid #e2e8f0; }
         .inventory-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); border-radius: 16px 16px 0 0; }
         .egg-name { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0; text-transform: capitalize; }
@@ -50,79 +54,99 @@
         .status-high { background: #dcfce7; color: #166534; }
         .status-low { background: #fef3c7; color: #92400e; }
         .status-out { background: #fee2e2; color: #991b1b; }
-
         .btn-group { display: flex; gap: 8px; margin-top: 1rem; }
-        .edit-btn, .history-btn { border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; flex: 1; }
+        .edit-btn, .history-btn { border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.2s; flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .edit-btn { background: #f1f5f9; color: var(--primary); }
-        .edit-btn:hover { background: var(--primary); color: white; }
         .history-btn { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
-        .history-btn:hover { background: #4338ca; color: white; }
 
-        /* --- Modal Styling --- */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 95%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .history-list { margin-top: 1rem; }
-        .history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-        .type-add { color: var(--success); font-weight: 600; }
-        .type-sub { color: var(--danger); font-weight: 600; }
+        /* --- Sidebar Overlay --- */
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .sidebar-overlay.active { display: block; }
+
+        /* --- Modal --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; padding: 10px; box-sizing: border-box; }
+        .modal-content { background: white; padding: 1.5rem; border-radius: 12px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        
+        /* Form Inputs */
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body>
 
-<nav class="sidebar">
-    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
-    
-    <a href="admin-dashboard.html" class="nav-link">
-        <i class="fas fa-th-large"></i> Dashboard
-    </a>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <a href="inventory.html" class="nav-link active">
-        <i class="fas fa-boxes-stacked"></i> View Inventory
-    </a>
-
-    <a href="sales-report.html" class="nav-link">
-        <i class="fas fa-file-invoice-dollar"></i> Sales Report
-    </a>
-    
-    <a href="admin-calendar.html" class="nav-link">
-        <i class="fas fa-calendar-alt"></i> Delivery Calendar
-    </a>
-    
-    <a href="production.html" class="nav-link">
-        <i class="fas fa-plus-circle"></i> Add Production
-    </a>
-    
-    <a href="admin-map.html" class="nav-link">
-        <i class="fas fa-map-marked-alt"></i> Delivery Map
-    </a>
-
-    <a href="production_report.html" class="nav-link">
-        <i class="fas fa-file-contract"></i> Production Report
-    </a>
-    
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+<nav class="sidebar" id="sidebar">
+    <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
+    <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="inventory.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+    <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
+    <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+    <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
 
 <div class="main-content">
     <header>
-        <h1>Inventory Management</h1>
-        <p>Monitor stock levels, update pricing, and track history.</p>
+        <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+        <div>
+            <h1>Inventory</h1>
+            <p style="margin: 0; color: var(--secondary); font-size: 0.9rem;">Monitor stock and track history.</p>
+        </div>
     </header>
     <div class="inventory-grid" id="inventory-container"></div>
 </div>
 
 <div class="modal" id="historyModal">
     <div class="modal-content">
-        <h3 id="historyTitle">Stock History</h3>
-        <div id="history-container" class="history-list">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="historyTitle" style="margin: 0;">Stock History</h3>
+            <i class="fas fa-times" onclick="closeHistory()" style="cursor: pointer;"></i>
+        </div>
+        <div id="history-container"></div>
+        <button onclick="closeHistory()" style="width: 100%; margin-top: 1.5rem; padding: 12px; background: #f1f5f9; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Close</button>
+    </div>
+</div>
+
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="editTitle" style="margin: 0;">Edit Item</h3>
+            <i class="fas fa-times" onclick="closeEdit()" style="cursor: pointer;"></i>
+        </div>
+        <form id="editForm">
+            <input type="hidden" id="edit-key">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">Price per Tray (₱)</label>
+                <input type="number" id="edit-price" step="0.01" required>
             </div>
-        <button class="btn-cancel" onclick="closeHistory()" style="width: 100%; margin-top: 1rem; padding: 10px; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">Adjust Stock (Pieces)</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="adj-type" style="width: 120px;">
+                        <option value="add">Add (+)</option>
+                        <option value="sub">Sub (-)</option>
+                    </select>
+                    <input type="number" id="adj-qty" placeholder="0">
+                </div>
+                <small style="color: var(--secondary)">Current: <span id="current-stock-display">0</span> Pcs</small>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" onclick="closeEdit()" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: #f1f5f9; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button type="submit" style="flex: 1; padding: 12px; border: none; border-radius: 8px; background: var(--primary); color: white; cursor: pointer; font-weight: 600;">Save</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+
     const firebaseConfig = {
         apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
         authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
@@ -152,45 +176,69 @@
                 container.innerHTML += `
                     <div class="inventory-card">
                         <h2 class="egg-name">${key.replace('_', ' ')}</h2>
-                        <div class="info-row"><span class="label">Current Stock:</span><span class="value">${qty} Pcs</span></div>
-                        <div class="info-row"><span class="label">Price per Tray:</span><span class="price-tag">₱${price.toLocaleString()}</span></div>
+                        <div class="info-row"><span class="label">Stock:</span><span class="value">${qty} Pcs</span></div>
+                        <div class="info-row"><span class="label">Price/Tray:</span><span class="price-tag">₱${price.toLocaleString()}</span></div>
                         <span class="badge ${statusClass}">${statusText}</span>
                         <div class="btn-group">
                             <button class="history-btn" onclick="viewHistory('${key}')"><i class="fas fa-history"></i> History</button>
-                            <button class="edit-btn" onclick="alert('Update modal code here')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="edit-btn" onclick="openEdit('${key}', ${price}, ${qty})"><i class="fas fa-edit"></i> Edit</button>
                         </div>
                     </div>`;
             }
         });
     }
 
+    /* --- Modal Logic --- */
+    function openEdit(key, price, qty) {
+        document.getElementById('edit-key').value = key;
+        document.getElementById('edit-price').value = price;
+        document.getElementById('current-stock-display').innerText = qty;
+        document.getElementById('editTitle').innerText = `Edit ${key.replace('_', ' ')}`;
+        document.getElementById('adj-qty').value = "";
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
+    function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
+
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const key = document.getElementById('edit-key').value;
+        const newPrice = parseFloat(document.getElementById('edit-price').value);
+        const adjQty = parseInt(document.getElementById('adj-qty').value) || 0;
+        const adjType = document.getElementById('adj-type').value;
+
+        const ref = db.ref(`inventory/${key}`);
+        ref.once('value').then(snap => {
+            const currentQty = snap.val().quantity || 0;
+            let finalQty = (adjType === 'add') ? currentQty + adjQty : currentQty - adjQty;
+            
+            return ref.update({
+                price: newPrice,
+                quantity: Math.max(0, finalQty)
+            });
+        }).then(() => {
+            closeEdit();
+        });
+    });
+
     async function viewHistory(size) {
         const historyContainer = document.getElementById('history-container');
-        const modal = document.getElementById('historyModal');
-        document.getElementById('historyTitle').innerText = `${size.replace('_',' ').toUpperCase()} History`;
+        document.getElementById('historyTitle').innerText = `${size.replace('_',' ').toUpperCase()}`;
         historyContainer.innerHTML = "Loading...";
-        modal.style.display = 'flex';
+        document.getElementById('historyModal').style.display = 'flex';
 
         let historyData = [];
-
-        // 1. Get Production Logs (+)
         const prodSnap = await db.ref("production").once("value");
         if (prodSnap.exists()) {
             const data = prodSnap.val();
             for (const date in data) {
                 if (data[date][size]) {
-                    historyData.push({
-                        date: date,
-                        qty: data[date][size].quantity,
-                        type: 'Production',
-                        class: 'type-add',
-                        prefix: '+'
-                    });
+                    historyData.push({ date, qty: data[date][size].quantity, type: 'Production', class: 'type-add', prefix: '+' });
                 }
             }
         }
 
-        // 2. Get Sales/Reservations Approved (-)
         const resSnap = await db.ref("reservation").once("value");
         if (resSnap.exists()) {
             const data = resSnap.val();
@@ -199,24 +247,15 @@
                     for (const uid in data[date][time]) {
                         const r = data[date][time][uid];
                         if (r.status === "Approved" && r.size === size) {
-                            // Imong logic: if Approved, nakuhaan og quantity * 24 (or multiplier)
                             const deducted = r.deducted_pieces || (r.trays * 24);
-                            historyData.push({
-                                date: date,
-                                qty: deducted,
-                                type: `Sold to ${r.name}`,
-                                class: 'type-sub',
-                                prefix: '-'
-                            });
+                            historyData.push({ date, qty: deducted, type: `Sold: ${r.name}`, class: 'type-sub', prefix: '-' });
                         }
                     }
                 }
             }
         }
 
-        // Sort by date newest first
         historyData.sort((a, b) => new Date(b.date) - new Date(a.date));
-
         historyContainer.innerHTML = historyData.length > 0 ? "" : "No history found.";
         historyData.forEach(item => {
             historyContainer.innerHTML += `
@@ -227,9 +266,7 @@
         });
     }
 
-    function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
     function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
-
     loadInventory();
 </script>
 </body>

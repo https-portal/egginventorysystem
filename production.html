@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Production Manager</title>
+    <title>Bakafa | Production Manager</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
@@ -16,348 +17,251 @@
             --primary: #4f46e5;
             --secondary: #64748b;
             --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
             --background: #f8fafc;
             --sidebar: #1e293b;
             --card: #ffffff;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background);
-            color: #1e293b;
-            margin: 0;
-            display: flex;
-            min-height: 100vh;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background); margin: 0; display: flex; min-height: 100vh; }
 
-        /* --- Sidebar Navigation (Uniform) --- */
+        /* --- Sidebar Navigation (Uniform Design) --- */
         .sidebar {
-            width: 260px;
-            background: var(--sidebar);
-            color: white;
-            padding: 2rem 1rem;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
+            width: 260px; background: var(--sidebar); color: white; padding: 2rem 1rem;
+            display: flex; flex-direction: column; position: fixed; height: 100vh;
+            left: 0; transition: transform 0.3s ease; z-index: 1001; box-sizing: border-box; 
         }
 
-        .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #fbbf24;
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
         }
 
+        .sidebar h2 { font-size: 1.25rem; margin-bottom: 2rem; color: #fbbf24; display: flex; align-items: center; gap: 10px; }
+        
         .nav-link {
-            padding: 12px 15px;
-            color: #cbd5e1;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 8px;
+            margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; gap: 10px;
         }
 
-        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-link.active { background: var(--primary); color: white; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+
+        .logout-btn {
+            margin-top: auto; background: #334155; border: none; color: #fca5a5;
+            padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 10px;
+        }
 
         /* --- Main Content --- */
-        .main-content {
-            margin-left: 260px;
-            padding: 2rem;
-            width: calc(100% - 260px);
+        .main-content { flex: 1; margin-left: 260px; padding: 1.5rem; width: 100%; box-sizing: border-box; transition: 0.3s; }
+
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; padding: 1rem; }
         }
 
-        header { margin-bottom: 2rem; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--sidebar); }
+        @media (max-width: 768px) { .mobile-toggle { display: block; } }
 
         /* --- Production Form Card --- */
         .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            background: white; padding: 1.5rem; border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;
         }
 
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            align-items: flex-end;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem; align-items: flex-end;
         }
 
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--secondary); }
 
         select, input {
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            outline: none;
-            font-size: 0.9rem;
+            padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;
+            outline: none; font-size: 1rem; width: 100%; box-sizing: border-box;
         }
 
         .btn-add {
-            background: var(--primary);
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
+            background: var(--primary); color: white; padding: 14px;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: 600;
+            transition: 0.3s; width: 100%;
         }
 
-        .btn-add:hover { background: #4338ca; transform: translateY(-1px); }
-
-        /* --- Stock Display --- */
         .stock-highlight {
-            background: #eef2ff;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
-            margin-top: 15px;
-            display: inline-block;
+            background: #eef2ff; padding: 12px; border-radius: 8px;
+            border-left: 4px solid var(--primary); margin-top: 15px;
+            display: block; font-size: 0.9rem;
         }
 
-        /* --- Table Styling --- */
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        /* --- Table Styling (Responsive) --- */
+        .table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { background: #f8fafc; padding: 12px; text-align: left; font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; }
+        td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+        .badge-size { background: #f1f5f9; padding: 4px 10px; border-radius: 6px; text-transform: capitalize; font-weight: 500; }
+
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
         }
+        .sidebar-overlay.active { display: block; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; }
-        td { padding: 15px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
-
-        .success-msg { color: var(--success); font-size: 0.85rem; margin-top: 10px; font-weight: 600; }
-        
-        .badge-size {
-            background: #f1f5f9;
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-transform: capitalize;
-            font-weight: 500;
-            
-        }
-
-/* Sidebar Logout Styling */
-.logout-btn {
-    margin-top: auto; /* Idoot ang button paubos */
-    background: #334155;
-    border: none;
-    color: #fca5a5;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: 0.3s;
-    margin-bottom: 20px;
-}
-
-.logout-btn:hover {
-    background: #475569;
-    color: #ff8080;
-}
-
-/* Siguroha nga ang sidebar naay box-sizing */
-.sidebar {
-    box-sizing: border-box;
-}
-
-
-
+        .success-msg { color: var(--success); font-size: 0.85rem; margin-top: 10px; font-weight: 600; text-align: center; }
     </style>
 </head>
-
 <body>
 
-<nav class="sidebar">
-    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
-    
-    <a href="admin-dashboard.html" class="nav-link">
-        <i class="fas fa-th-large"></i> Dashboard
-    </a>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <a href="inventory.html" class="nav-link active">
-        <i class="fas fa-boxes-stacked"></i> View Inventory
-    </a>
-
-    <a href="sales-report.html" class="nav-link">
-        <i class="fas fa-file-invoice-dollar"></i> Sales Report
-    </a>
-    
-    <a href="admin-calendar.html" class="nav-link">
-        <i class="fas fa-calendar-alt"></i> Delivery Calendar
-    </a>
-    
-    <a href="production.html" class="nav-link">
-        <i class="fas fa-plus-circle"></i> Add Production
-    </a>
-    
-    <a href="admin-map.html" class="nav-link">
-        <i class="fas fa-map-marked-alt"></i> Delivery Map
-    </a>
-
-    <a href="production_report.html" class="nav-link">
-        <i class="fas fa-file-contract"></i> Production Report
-    </a>
-    
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+<nav class="sidebar" id="sidebar">
+    <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
+    <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+    <a href="production.html" class="nav-link active"><i class="fas fa-plus-circle"></i> Add Production</a>
+    <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+    <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
 
-    <div class="main-content">
-        <header>
-            <h1>Production Management</h1>
-            <p style="color: var(--secondary)">Record daily egg harvest and update inventory.</p>
-        </header>
+<div class="main-content">
+    <header>
+        <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem;">Add Production</h1>
+            <p style="margin:0; color: var(--secondary); font-size: 0.85rem;">Record daily egg harvest.</p>
+        </div>
+    </header>
 
-        <div class="card">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Egg Size</label>
-                    <select id="size" onchange="loadStock()">
-                        <option value="">Select Size</option>
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                        <option value="extra_large">Extra Large</option>
-                        <option value="jumbo">Jumbo</option>
-                        <option value="cracked">Cracked</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="qty" placeholder="0">
-                </div>
+    <div class="card">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Egg Size</label>
+                <select id="size" onchange="loadStock()">
+                    <option value="">Select Size</option>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                    <option value="extra_large">Extra Large</option>
+                    <option value="jumbo">Jumbo</option>
+                    <option value="cracked">Cracked</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Quantity (Trays)</label>
+                <input type="number" id="qty" placeholder="0">
+            </div>
 
-                <div class="form-group">
-                    <label>Production Date</label>
-                    <input type="date" id="date">
-                </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="date">
+            </div>
 
+            <div class="form-group">
                 <button class="btn-add" onclick="saveProduction()">
-                    <i class="fas fa-save"></i> Save Production
+                    <i class="fas fa-save"></i> Save
                 </button>
             </div>
-
-            <div class="stock-highlight">
-                <i class="fas fa-warehouse"></i> Current Stock: <span id="stock" style="font-weight: 700; color: var(--primary);">0</span>
-            </div>
-            <div class="success-msg" id="msg"></div>
         </div>
 
-        <h3><i class="fas fa-history"></i> Recent Production Logs</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date Recorded</th>
-                        <th>Egg Size</th>
-                        <th>Quantity Added</th>
-                    </tr>
-                </thead>
-                <tbody id="history"></tbody>
-            </table>
+        <div class="stock-highlight">
+            <i class="fas fa-warehouse"></i> Current Stock: <span id="stock" style="font-weight: 700; color: var(--primary);">0</span>
         </div>
+        <div class="success-msg" id="msg"></div>
     </div>
 
-    <script>
-        // --- Firebase Config (Keep yours) ---
-        const firebaseConfig={
-            apiKey:"AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
-            authDomain:"egg-inventory-system-10c0b.firebaseapp.com",
-            databaseURL:"https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
-            projectId:"egg-inventory-system-10c0b",
-            storageBucket:"egg-inventory-system-10c0b.appspot.com",
-            messagingSenderId:"935350302045",
-            appId:"1:935350302045:web:96ff5e551cdea5b120e4b4"
-        };
+    <h3 style="font-size: 1.1rem; margin-bottom: 1rem;"><i class="fas fa-history"></i> Recent Logs</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Size</th>
+                    <th>Added</th>
+                </tr>
+            </thead>
+            <tbody id="history"></tbody>
+        </table>
+    </div>
+</div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db=firebase.database();
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
 
-        // Auto set date
-        document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    const firebaseConfig = {
+        apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+        authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
+        databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+        projectId: "egg-inventory-system-10c0b",
+        storageBucket: "egg-inventory-system-10c0b.appspot.com",
+        messagingSenderId: "935350302045",
+        appId: "1:935350302045:web:96ff5e551cdea5b120e4b4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        function loadStock(){
-            const size=document.getElementById("size").value;
-            if(!size) return;
-            db.ref(`inventory/${size}/quantity`).on("value",snap=>{
-                document.getElementById("stock").innerText = snap.exists() ? snap.val() : 0;
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+
+    function loadStock(){
+        const size = document.getElementById("size").value;
+        if(!size) return;
+        db.ref(`inventory/${size}/quantity`).on("value", snap => {
+            document.getElementById("stock").innerText = snap.exists() ? snap.val() : 0;
+        });
+    }
+
+    function saveProduction(){
+        const size = document.getElementById("size").value;
+        const qty = parseInt(document.getElementById("qty").value);
+        const selectedDate = document.getElementById("date").value;
+
+        if(!size || !qty || !selectedDate) return alert("Please complete fields");
+
+        db.ref(`production/${selectedDate}/${size}`).transaction(current => {
+            if(current === null) return {quantity: qty};
+            current.quantity += qty;
+            return current;
+        });
+
+        db.ref(`inventory/${size}/quantity`).transaction(stock => (stock || 0) + qty);
+
+        document.getElementById("msg").innerText = "✓ Updated Successfully";
+        document.getElementById("qty").value = "";
+        setTimeout(() => { document.getElementById("msg").innerText = ""; }, 3000);
+    }
+
+    function loadHistory(){
+        db.ref("production").on("value", snap => {
+            const tbody = document.getElementById("history");
+            tbody.innerHTML = "";
+            if(!snap.exists()) return;
+
+            const data = snap.val();
+            const sortedDates = Object.keys(data).sort().reverse();
+
+            sortedDates.forEach(date => {
+                for(const size in data[date]){
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${date}</td>
+                        <td><span class="badge-size">${size.replace('_',' ')}</span></td>
+                        <td><strong>+ ${data[date][size].quantity}</strong></td>`;
+                    tbody.appendChild(row);
+                }
             });
-        }
+        });
+    }
 
-        function saveProduction(){
-            const size=document.getElementById("size").value;
-            const qty=parseInt(document.getElementById("qty").value);
-            const selectedDate=document.getElementById("date").value;
-
-            if(!size || !qty || !selectedDate){
-                alert("Please complete fields");
-                return;
-            }
-
-            const productionRef=db.ref(`production/${selectedDate}/${size}`);
-            const inventoryRef=db.ref(`inventory/${size}/quantity`);
-
-            productionRef.transaction(current=>{
-                if(current===null) return {quantity:qty};
-                current.quantity += qty;
-                return current;
-            });
-
-            inventoryRef.transaction(stock=>{
-                return (stock || 0) + qty;
-            });
-
-            document.getElementById("msg").innerText="✓ Production Saved and Inventory Updated";
-            document.getElementById("qty").value="";
-            setTimeout(() => { document.getElementById("msg").innerText=""; }, 3000);
-        }
-
-        function loadHistory(){
-            db.ref("production").on("value",snap=>{
-                const tbody=document.getElementById("history");
-                tbody.innerHTML="";
-                if(!snap.exists()) return;
-
-                const data=snap.val();
-                // Sorting para pinaka-recent ang naa sa taas
-                const sortedDates = Object.keys(data).sort().reverse();
-
-                sortedDates.forEach(date => {
-                    for(const size in data[date]){
-                        const row=document.createElement("tr");
-                        row.innerHTML=`
-                            <td><i class="far fa-calendar-alt"></i> ${date}</td>
-                            <td><span class="badge-size">${size.replace('_',' ')}</span></td>
-                            <td><strong>+ ${data[date][size].quantity}</strong></td>
-                        `;
-                        tbody.appendChild(row);
-                    }
-                });
-            });
-        }
-
-        loadHistory();
-    </script>
-
+    function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
+    loadHistory();
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Production Reports</title>
+    <title>Bakafa | Production Reports</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,38 +27,38 @@
             background-color: var(--background);
             margin: 0;
             display: flex;
+            min-height: 100vh;
         }
 
-      
-.sidebar {
-    width: 260px;
-    background: var(--sidebar);
-    color: white;
-    padding: 2rem 1rem;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    height: 100vh;
-    box-sizing: border-box; 
-}
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar);
+            color: white;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            box-sizing: border-box;
+        }
 
-.logout-btn {
-    margin-top: auto; 
-    background: #334155;
-    border: none;
-    color: #fca5a5;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-bottom: 20px; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+        /* Mobile State for Sidebar */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%); /* Hidden by default sa mobile */
+            }
+            .sidebar.active {
+                transform: translateX(0); /* Mo-gawas kon naay active class */
+            }
+        }
 
-        .sidebar h2 { color: #fbbf24; margin-bottom: 2rem; }
+        .sidebar h2 { color: #fbbf24; margin-bottom: 2rem; display: flex; align-items: center; gap: 10px; font-size: 1.25rem; }
+        
         .nav-link {
             padding: 12px 15px;
             color: #cbd5e1;
@@ -68,146 +68,154 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: 0.3s;
         }
         .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+        .nav-link.active { background: var(--primary); }
 
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            padding: 2rem;
-            width: calc(100% - 260px);
-        }
-
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-box {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border-bottom: 4px solid var(--primary);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .stat-box h4 { margin: 0; color: var(--secondary); font-size: 0.8rem; text-transform: uppercase; }
-        .stat-box .val { font-size: 1.5rem; font-weight: 700; margin-top: 5px; color: var(--primary); }
-
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f1f5f9; padding: 15px; text-align: left; font-size: 0.75rem; color: var(--secondary); }
-        td { padding: 15px; border-top: 1px solid #f1f5f9; }
-
-        .btn-print {
-            background: var(--primary);
-            color: white;
+        .logout-btn {
+            margin-top: auto;
+            background: #334155;
             border: none;
-            padding: 10px 20px;
+            color: #fca5a5;
+            padding: 12px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
+        /* --- Mobile Overlay --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            width: calc(100% - 260px);
+            transition: 0.3s;
+        }
+
+        /* --- Mobile Header (Hamburger) --- */
+        .mobile-header {
+            display: none; /* Hidden sa Desktop */
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; width: 100%; padding: 1rem; }
+            .mobile-header { display: flex; } /* Pakita sa Mobile */
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--sidebar);
+            cursor: pointer;
+        }
+
+        /* --- Rest of Styles (Filters, Stats, Table) --- */
+        .report-header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .flex-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-box { background: white; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-box .val { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+        .table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.75rem; color: var(--secondary); }
+        td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
+        .btn-print { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        input[type="date"] { padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-family: inherit; }
+
         @media print {
-            .sidebar, .btn-print, .filters { display: none; }
-            .main-content { margin-left: 0; width: 100%; }
+            .sidebar, .btn-print, .mobile-header, .report-header:nth-child(3) { display: none; }
+            .main-content { margin-left: 0; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-<nav class="sidebar">
-    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
-    
-    <a href="admin-dashboard.html" class="nav-link">
-        <i class="fas fa-th-large"></i> Dashboard
-    </a>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <a href="inventory.html" class="nav-link active">
-        <i class="fas fa-boxes-stacked"></i> View Inventory
-    </a>
-
-    <a href="sales-report.html" class="nav-link">
-        <i class="fas fa-file-invoice-dollar"></i> Sales Report
-    </a>
-    
-    <a href="admin-calendar.html" class="nav-link">
-        <i class="fas fa-calendar-alt"></i> Delivery Calendar
-    </a>
-    
-    <a href="production.html" class="nav-link">
-        <i class="fas fa-plus-circle"></i> Add Production
-    </a>
-    
-    <a href="admin-map.html" class="nav-link">
-        <i class="fas fa-map-marked-alt"></i> Delivery Map
-    </a>
-
-    <a href="production_report.html" class="nav-link">
-        <i class="fas fa-file-contract"></i> Production Report
-    </a>
-    
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+<nav class="sidebar" id="sidebar">
+    <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
+    <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+    <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
+    <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+    <a href="production_report.html" class="nav-link active"><i class="fas fa-file-contract"></i> Production Report</a>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
 
 <div class="main-content">
-    <div class="report-header">
+    <div class="mobile-header">
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <span style="font-weight: 700; color: var(--sidebar);">EggDash</span>
+        <div style="width: 24px;"></div> 
+    </div>
+
+    <div class="report-header flex-header">
         <div>
-            <h1 style="margin:0">Production Report</h1>
+            <h1 style="margin:0; font-size: 1.5rem;">Production Report</h1>
             <p style="color:var(--secondary); margin:5px 0 0 0">Summary of all egg harvests.</p>
         </div>
-       <button class="btn-print" onclick="exportToExcel()" style="background: #166534;">
-    <i class="fas fa-file-excel"></i> Export to Excel
-</button>
-    </div>
-
-<div class="report-header" style="margin-top: -1rem; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;">
-    <div style="display: flex; flex-direction: column; gap: 5px;">
-        <label style="font-size: 0.75rem; font-weight: 600; color: var(--secondary);">START DATE</label>
-        <input type="date" id="start-date" style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-    </div>
-    <div style="display: flex; flex-direction: column; gap: 5px;">
-        <label style="font-size: 0.75rem; font-weight: 600; color: var(--secondary);">END DATE</label>
-        <input type="date" id="end-date" style="padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-    </div>
-    <div style="display: flex; align-items: flex-end;">
-        <button onclick="loadProductionReport()" class="btn-print" style="background: var(--sidebar); padding: 9px 20px;">
-            <i class="fas fa-filter"></i> Apply Filter
+        <button class="btn-print" onclick="exportToExcel()" style="background: #166534;">
+            <i class="fas fa-file-excel"></i> Export Excel
         </button>
     </div>
-    <div style="display: flex; align-items: flex-end;">
-        <button onclick="resetFilters()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;">
-            Reset
-        </button>
-    </div>
-</div>
 
-
-    <div class="stats-grid" id="summary-stats">
+    <div class="report-header">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--secondary);">START DATE</label>
+                <input type="date" id="start-date">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 0.75rem; font-weight: 600; color: var(--secondary);">END DATE</label>
+                <input type="date" id="end-date">
+            </div>
+            <button onclick="loadProductionReport()" class="btn-print" style="background: var(--sidebar);">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <button onclick="resetFilters()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600; padding-bottom: 10px;">
+                Reset
+            </button>
         </div>
+    </div>
+
+    <div class="stats-grid" id="summary-stats"></div>
 
     <div class="table-container">
         <table>
@@ -215,127 +223,118 @@
                 <tr>
                     <th>Date</th>
                     <th>Size</th>
-                    <th>Quantity (Pcs)</th>
-                    <th>Estimated Trays (30/tray)</th>
+                    <th>Qty (Pcs)</th>
+                    <th>Trays (30s)</th>
                 </tr>
             </thead>
             <tbody id="report-body">
-                <tr><td colspan="4" style="text-align:center">Loading production data...</td></tr>
+                <tr><td colspan="4" style="text-align:center">Loading records...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-  
+    // --- Hamburger Toggle Function ---
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+
+    // --- Firebase Initialization ---
     const firebaseConfig = {
         apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
         authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
         databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
-        projectId: "egg-inventory-system-10c0b",
-        storageBucket: "egg-inventory-system-10c0b.appspot.com",
-        messagingSenderId: "935350302045",
-        appId: "1:935350302045:web:96ff5e551cdea5b120e4b4"
+        projectId: "egg-inventory-system-10c0b"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
+    function loadProductionReport() {
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
 
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-function loadProductionReport() {
-    const startDate = document.getElementById("start-date").value;
-    const endDate = document.getElementById("end-date").value;
-
-    db.ref("production").on("value", snapshot => {
-        const tbody = document.getElementById("report-body");
-        const summaryDiv = document.getElementById("summary-stats");
-        tbody.innerHTML = "";
-        
-        if (!snapshot.exists()) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No records found.</td></tr>";
-            return;
-        }
-
-        const data = snapshot.val();
-        let totalOverall = 0;
-        let sizeTotals = {};
-        let hasData = false;
-
-        const sortedDates = Object.keys(data).sort().reverse();
-
-        sortedDates.forEach(date => {
-            // DATE FILTER LOGIC
-            if (startDate && date < startDate) return;
-            if (endDate && date > endDate) return;
-
-            hasData = true;
-            for (const size in data[date]) {
-                const qty = data[date][size].quantity;
-                totalOverall += qty;
-                sizeTotals[size] = (sizeTotals[size] || 0) + qty;
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td><strong>${date}</strong></td>
-                    <td style="text-transform: capitalize;">${size.replace('_', ' ')}</td>
-                    <td>${qty.toLocaleString()}</td>
-                    <td>${(qty / 30).toFixed(1)}</td>
-                `;
-                tbody.appendChild(row);
+        db.ref("production").on("value", snapshot => {
+            const tbody = document.getElementById("report-body");
+            tbody.innerHTML = "";
+            
+            if (!snapshot.exists()) {
+                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No records found.</td></tr>";
+                return;
             }
+
+            const data = snapshot.val();
+            let totalOverall = 0;
+            let sizeTotals = {};
+            let hasData = false;
+
+            const sortedDates = Object.keys(data).sort().reverse();
+
+            sortedDates.forEach(date => {
+                if (startDate && date < startDate) return;
+                if (endDate && date > endDate) return;
+
+                hasData = true;
+                for (const size in data[date]) {
+                    const qty = data[date][size].quantity;
+                    totalOverall += qty;
+                    sizeTotals[size] = (sizeTotals[size] || 0) + qty;
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td><strong>${date}</strong></td>
+                        <td style="text-transform: capitalize;">${size.replace('_', ' ')}</td>
+                        <td>${qty.toLocaleString()}</td>
+                        <td>${(qty / 30).toFixed(1)}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+
+            if (!hasData) {
+                tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No records found for these dates.</td></tr>";
+            }
+            renderSummary(totalOverall, sizeTotals);
         });
-
-        if (!hasData) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No production found for selected dates.</td></tr>";
-        }
-
-        // Update Summary Cards
-        renderSummary(totalOverall, sizeTotals);
-    });
-}
-
-function renderSummary(total, sizes) {
-    const summaryDiv = document.getElementById("summary-stats");
-    summaryDiv.innerHTML = `
-        <div class="stat-box">
-            <h4>Total Harvest</h4>
-            <div class="val">${total.toLocaleString()}</div>
-        </div>
-    `;
-
-    for (const s in sizes) {
-        const box = document.createElement("div");
-        box.className = "stat-box";
-        box.innerHTML = `
-            <h4 style="text-transform: capitalize;">${s.replace('_',' ')}</h4>
-            <div class="val">${sizes[s].toLocaleString()}</div>
-        `;
-        summaryDiv.appendChild(box);
     }
-}
 
-function resetFilters() {
-    document.getElementById("start-date").value = "";
-    document.getElementById("end-date").value = "";
+    function renderSummary(total, sizes) {
+        const summaryDiv = document.getElementById("summary-stats");
+        summaryDiv.innerHTML = `
+            <div class="stat-box">
+                <h4 style="margin:0; font-size:0.7rem; color:var(--secondary)">TOTAL HARVEST</h4>
+                <div class="val">${total.toLocaleString()}</div>
+            </div>
+        `;
+        for (const s in sizes) {
+            const box = document.createElement("div");
+            box.className = "stat-box";
+            box.innerHTML = `
+                <h4 style="text-transform: capitalize; margin:0; font-size:0.7rem; color:var(--secondary)">${s.replace('_',' ')}</h4>
+                <div class="val">${sizes[s].toLocaleString()}</div>
+            `;
+            summaryDiv.appendChild(box);
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById("start-date").value = "";
+        document.getElementById("end-date").value = "";
+        loadProductionReport();
+    }
+
+    function exportToExcel() {
+        const table = document.querySelector("table");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Production" });
+        XLSX.writeFile(wb, "EggDash_Production_Report.xlsx");
+    }
+
+    function logout() {
+        firebase.auth().signOut().then(() => window.location = "admin.html");
+    }
+
     loadProductionReport();
-}
-
-function exportToExcel() {
-    const table = document.querySelector("table");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "Production Report" });
-    
-    // Customize filename with date range if present
-    const start = document.getElementById("start-date").value || "All";
-    const end = document.getElementById("end-date").value || "Time";
-    const filename = `EggDash_Production_${start}_to_${end}.xlsx`;
-    
-    XLSX.writeFile(wb, filename);
-    alert("✓ Excel file generated based on current filter.");
-}
-
-// Initial Load
-loadProductionReport();
 </script>
 
 </body>

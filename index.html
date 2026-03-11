@@ -3,282 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | My Reservations</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>EggDash | Welcome</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --primary: #4f46e5;
-            --secondary: #0ea5e9;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #f8fafc;
-            --text-dark: #1e293b;
+            --primary: #fbbf24; /* Egg Yellow */
+            --primary-dark: #d97706;
+            --sidebar: #1e293b;
+            --background: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 0;
-        }
-
-        .header {
-            background: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
-
-        .container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
-
-        .welcome-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 20px;
-            padding: 25px;
-            color: white;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.15);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .welcome-card h2 { margin: 0; font-size: 1.3rem; }
-        .welcome-card p { margin: 5px 0 0; opacity: 0.9; font-size: 0.9rem; }
-
-        /* Reserve Button */
-        .btn-reserve {
-            background: white;
-            color: var(--primary);
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: 0.3s;
+            background-color: var(--background);
+            height: 100vh;
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .btn-reserve:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            justify-content: center;
             overflow: hidden;
         }
 
-        .table-wrapper { overflow-x: auto; }
-
-        table {
+        /* --- Fullscreen Background --- */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
+            height: 100%;
+            z-index: -1;
+            /* Mogamit sa imong logo.png as background, center and cover */
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('logo.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px);
+            transform: scale(1.1);
         }
 
-        th {
-            text-align: left;
-            padding: 15px;
-            background: #f1f5f9;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        /* Status Badges */
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .status-pending { background: #fffbeb; color: #b45309; }
-        .status-approved { background: #f0fdf4; color: #15803d; }
-        .status-delivered { background: #eff6ff; color: #1d4ed8; }
-
-        .logout-btn {
-            display: block;
+        /* --- Loading Bar Container --- */
+        #loader-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 200px;
-            margin: 30px auto;
-            padding: 12px;
-            border: 2px solid #fee2e2;
-            background: transparent;
-            color: var(--danger);
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
+            height: 100%;
+            background: var(--sidebar);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
         }
 
-        .logout-btn:hover { background: #fee2e2; }
+        .loader-logo {
+            width: 100px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
 
-        @media (max-width: 600px) {
-            .welcome-card { text-align: center; justify-content: center; }
-            th, td { padding: 10px; font-size: 0.8rem; }
+        .progress-container {
+            width: 250px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            transition: width 0.1s linear;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- Main Content Hero --- */
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+
+        .hero.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: #cbd5e1;
+        }
+
+        .reserve-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--primary);
+            color: var(--sidebar);
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
+        }
+
+        .reserve-btn:hover {
+            background: white;
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .reserve-btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="logo"><i class="fas fa-egg"></i> EggDash</div>
-    <div id="user-display" style="font-size: 0.8rem; color: #64748b;"></div>
-</div>
-
-<div class="container">
-    <div class="welcome-card">
-        <div>
-            <p>Summary for</p>
-            <h2 id="user-email">Loading...</h2>
+    <div id="loader-wrapper">
+        <img src="logo.png" alt="Logo" class="loader-logo">
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
         </div>
-        <a href="reservation.html" class="btn-reserve">
-            <i class="fas fa-plus-circle"></i> Reserve Eggs
+        <p style="color: white; margin-top: 15px; font-size: 0.8rem; letter-spacing: 2px;">LOADING...</p>
+    </div>
+
+    <div class="bg-container"></div>
+
+    <div class="hero" id="hero-content">
+        <h1>Fresh Harvest, Just a Tap Away.</h1>
+        <p>Reliable and farm-fresh egg supply for your home and business.</p>
+        
+        <a href="reservation.html" class="reserve-btn">
+            Reserve Now <i class="fas fa-arrow-right"></i>
         </a>
     </div>
 
-    <div class="card">
-        <h3 style="margin-bottom: 20px; font-size: 1.1rem;"><i class="fas fa-history"></i> Recent Transactions</h3>
-        <div class="table-wrapper">
-            <table id="reservation-table">
-                <thead>
-                    <tr>
-                        <th>Date & Time</th>
-                        <th>Details</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Delivery</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="5" style="text-align:center;">Fetching your records...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-</div>
-
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
-    authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
-    databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
-    projectId: "egg-inventory-system-10c0b",
-    storageBucket: "egg-inventory-system-10c0b.appspot.com",
-    messagingSenderId: "935350302045",
-    appId: "1:935350302045:web:96ff5e551cdea5b120e4b4",
-    measurementId: "G-R5ZEYKVXZN"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
-
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('user-email').innerText = user.email;
-        fetchUserReservations(user.uid);
-    } else {
-        window.location = "user-login.html";
-    }
-});
-
-function fetchUserReservations(uid) {
-    database.ref('reservation').on('value', snapshot => {
-        const tbody = document.querySelector('#reservation-table tbody');
-        tbody.innerHTML = '';
-        
-        if (snapshot.exists()) {
-            const allDates = snapshot.val();
-            let hasData = false;
-
-            // Sort dates to show newest first
-            const sortedDates = Object.keys(allDates).sort().reverse();
-
-            sortedDates.forEach(date => {
-                const times = allDates[date];
-                const sortedTimes = Object.keys(times).sort().reverse();
-
-                sortedTimes.forEach(time => {
-                    // Check if current user has reservation in this slot
-                    // This handles path: reservation/date/time/uid OR reservation/date/time_uid
-                    const dayReservations = times[time];
+    <script>
+        // Loading Logic
+        window.addEventListener('DOMContentLoaded', () => {
+            const progressBar = document.getElementById('progress-bar');
+            const loaderWrapper = document.getElementById('loader-wrapper');
+            const heroContent = document.getElementById('hero-content');
+            
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
                     
-                    // Logic to find current user's data
-                    Object.keys(dayReservations).forEach(key => {
-                        if (key === uid || key.includes(uid)) {
-                            const res = dayReservations[key];
-                            hasData = true;
-
-                            const statusClass = res.status === 'Approved' ? 'status-approved' : 'status-pending';
-                            const deliveryClass = res.delivery_status === 'Delivered' ? 'status-delivered' : 'status-pending';
-
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td>
-                                    <div style="font-weight:600;">${date}</div>
-                                    <div style="font-size:0.75rem; color:#64748b;">${time.replace(/-/g, ':')}</div>
-                                </td>
-                                <td>
-                                    <div style="font-weight:500;">${res.size.toUpperCase()}</div>
-                                    <div style="font-size:0.75rem; color:#64748b;">${res.trays} Trays</div>
-                                </td>
-                                <td style="font-weight:700; color:var(--primary);">₱${res.total_price}</td>
-                                <td><span class="badge ${statusClass}">${res.status}</span></td>
-                                <td><span class="badge ${deliveryClass}">${res.delivery_status || 'Pending'}</span></td>
-                            `;
-                            tbody.appendChild(row);
-                        }
-                    });
-                });
-            });
-
-            if (!hasData) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">No reservations found. Click "Reserve Eggs" to start!</td></tr>';
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px;">No reservations found.</td></tr>';
-        }
-    });
-}
-
-function logout() {
-    auth.signOut().then(() => window.location = "user-login.html");
-}
-</script>
-
+                    // Hide loader
+                    loaderWrapper.style.opacity = '0';
+                    setTimeout(() => {
+                        loaderWrapper.style.visibility = 'hidden';
+                        // Show content
+                        heroContent.classList.add('show');
+                    }, 500);
+                } else {
+                    width += 2; // Speed of loading
+                    progressBar.style.width = width + '%';
+                }
+            }, 30); // 30ms * 50 steps = approx 1.5 seconds loading
+        });
+    </script>
 </body>
 </html>

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EggDash | Delivery Map</title>
+    <title>Bakafa | Delivery Map</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -19,178 +20,179 @@
             --primary: #4f46e5;
             --sidebar: #1e293b;
             --background: #f8fafc;
+            --secondary: #64748b;
+            --success: #22c55e;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; background-color: var(--background); overflow: hidden; }
 
-        /* --- Sidebar Navigation (Uniform) --- */
+        /* --- Sidebar Navigation --- */
         .sidebar {
-            width: 260px;
-            background: var(--sidebar);
-            color: white;
-            padding: 2rem 1rem;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            box-sizing: border-box;
+            width: 260px; background: var(--sidebar); color: white; padding: 2rem 1rem;
+            display: flex; flex-direction: column; position: fixed; height: 100vh;
+            left: 0; transition: transform 0.3s ease; z-index: 1001; box-sizing: border-box; 
         }
 
-        .sidebar h2 {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #fbbf24;
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
         }
 
-        .nav-link {
-            padding: 12px 15px;
-            color: #cbd5e1;
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .sidebar h2 { font-size: 1.25rem; margin-bottom: 2rem; color: #fbbf24; display: flex; align-items: center; gap: 10px; }
+        .nav-link { padding: 12px 15px; color: #cbd5e1; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+        .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: white; }
+
+        .logout-btn { margin-top: auto; background: #334155; border: none; color: #fca5a5; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+
+        /* --- Main Content --- */
+        .main-content { flex: 1; margin-left: 260px; position: relative; height: 100vh; transition: 0.3s; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* --- UI Controls Over Map --- */
+        .map-controls {
+            position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
         }
 
-        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
-        .nav-link.active { background: var(--primary); color: white; }
+        .header-row { display: flex; align-items: center; gap: 10px; }
 
-        .logout-btn {
-            margin-top: auto;
-            background: #334155;
-            border: none;
-            color: #fca5a5;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
+        .filter-card {
+            background: white; padding: 8px 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center;
+            gap: 10px; pointer-events: auto;
         }
 
-        /* --- Map Container --- */
-        .main-content {
-            flex: 1;
-            position: relative;
-            background: var(--background);
+        .filter-card input[type="date"] {
+            border: 1px solid #ddd; padding: 5px; border-radius: 5px; font-family: 'Inter'; outline: none;
         }
 
-        #map {
-            width: 100%;
-            height: 100%;
+        .mobile-toggle {
+            display: none; background: white; width: 45px; height: 45px; border-radius: 12px;
+            justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); pointer-events: auto; color: var(--sidebar);
         }
 
-        .map-header {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            pointer-events: none;
-        }
+        @media (max-width: 768px) { .mobile-toggle { display: flex; } }
+
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .sidebar-overlay.active { display: block; }
         
-        .map-header h1 { margin: 0; font-size: 1.2rem; color: var(--sidebar); }
+        /* Icon Colors */
+        .status-delivered { color: var(--success); }
+        .status-pending { color: var(--primary); }
     </style>
 </head>
 <body>
-<nav class="sidebar">
-    <h2><i class="fas fa-egg"></i>Bakaka Poultry Farm</h2>
-    
-    <a href="admin-dashboard.html" class="nav-link">
-        <i class="fas fa-th-large"></i> Dashboard
-    </a>
 
-    <a href="inventory.html" class="nav-link active">
-        <i class="fas fa-boxes-stacked"></i> View Inventory
-    </a>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <a href="sales-report.html" class="nav-link">
-        <i class="fas fa-file-invoice-dollar"></i> Sales Report
-    </a>
-    
-    <a href="admin-calendar.html" class="nav-link">
-        <i class="fas fa-calendar-alt"></i> Delivery Calendar
-    </a>
-    
-    <a href="production.html" class="nav-link">
-        <i class="fas fa-plus-circle"></i> Add Production
-    </a>
-    
-    <a href="admin-map.html" class="nav-link">
-        <i class="fas fa-map-marked-alt"></i> Delivery Map
-    </a>
-
-    <a href="production_report.html" class="nav-link">
-        <i class="fas fa-file-contract"></i> Production Report
-    </a>
-    
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+<nav class="sidebar" id="sidebar">
+    <h2><i class="fas fa-egg"></i>Bakafa Farm</h2>
+    <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+    <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
+    <a href="admin-map.html" class="nav-link active"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+    <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
 
-    <div class="main-content">
-        <div class="map-header">
-            <h1><i class="fas fa-truck"></i> Live Delivery Map</h1>
+<div class="main-content">
+    <div class="map-controls">
+        <div class="header-row">
+            <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+            <div class="filter-card">
+                <i class="fas fa-calendar-day" style="color: var(--primary);"></i>
+                <input type="date" id="dateFilter" onchange="loadMapData()">
+            </div>
         </div>
-        <div id="map"></div>
     </div>
+    <div id="map"></div>
+</div>
 
-    <script>
-        const firebaseConfig={
-            apiKey:"AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
-            authDomain:"egg-inventory-system-10c0b.firebaseapp.com",
-            databaseURL:"https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
-            projectId:"egg-inventory-system-10c0b"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db=firebase.database();
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
 
-        // Initialize Map
-        const map=L.map('map').setView([10.3157,123.8854], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    const firebaseConfig = {
+        apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
+        authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
+        databaseURL: "https://egg-inventory-system-10c0b-default-rtdb.firebaseio.com",
+        projectId: "egg-inventory-system-10c0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // Load Locations
-        db.ref("reservation").on("value", snapshot => {
+    // Default Date to Today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateFilter').value = today;
+
+    const map = L.map('map', { zoomControl: false }).setView([10.3157, 123.8854], 11);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+    let markerGroup = L.layerGroup().addTo(map);
+
+    function loadMapData() {
+        const selectedDate = document.getElementById('dateFilter').value;
+        markerGroup.clearLayers();
+
+        // Referencing the path: reservation/YYYY-MM-DD
+        db.ref(`reservation/${selectedDate}`).on("value", snapshot => {
+            markerGroup.clearLayers();
             if(!snapshot.exists()) return;
-            
-            // Clear existing markers if necessary (optional depending on your needs)
-            const data=snapshot.val();
-            for(const date in data){
-                for(const time in data[date]){
-                    for(const uid in data[date][time]){
-                        const r=data[date][time][uid];
-                        if(r.location && r.status === "Approved"){
-                            const marker = L.marker([r.location.lat, r.location.lng]).addTo(map);
-                            
-                            // Professional Popup Design
-                            const popupContent = `
-                                <div style="font-family: 'Inter', sans-serif;">
-                                    <strong style="color: #4f46e5;">${r.name}</strong><br>
-                                    <small>${r.contact || 'No Contact'}</small><hr>
-                                    <b>Orders:</b> ${r.trays} Trays (${r.size})<br>
-                                    <b>Delivery:</b> ${r.delivery_status || 'Pending'}
+
+            const times = snapshot.val();
+            for(const time in times) {
+                for(const uid in times[time]) {
+                    const r = times[time][uid];
+                    
+                    if(r.location && r.status === "Approved") {
+                        const isDelivered = r.delivery_status === "Delivered";
+                        
+                        // Custom Marker Icon
+                        const markerColor = isDelivered ? "#22c55e" : "#4f46e5";
+                        const markerIcon = L.divIcon({
+                            html: `<div style="background-color: ${markerColor}; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
+                                    <i class="fas ${isDelivered ? 'fa-check' : 'fa-truck-fast'}"></i>
+                                   </div>`,
+                            className: '',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 30],
+                            popupAnchor: [0, -30]
+                        });
+
+                        const marker = L.marker([r.location.lat, r.location.lng], { icon: markerIcon });
+                        
+                        const popupContent = `
+                            <div style="font-family: 'Inter', sans-serif; min-width: 160px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong style="color: var(--sidebar);">${r.name}</strong>
+                                    ${isDelivered ? '<i class="fas fa-check-circle" style="color: #22c55e;"></i>' : ''}
                                 </div>
-                            `;
-                            marker.bindPopup(popupContent);
-                        }
+                                <small style="color: var(--secondary);"><i class="fas fa-clock"></i> ${time}</small>
+                                <hr style="margin: 8px 0; border: 0; border-top: 1px solid #eee;">
+                                <b>Order:</b> ${r.trays} Trays (${r.size})<br>
+                                <b>Status:</b> <span style="color: ${markerColor}; font-weight: 700;">${r.delivery_status || 'Pending'}</span>
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent).addTo(markerGroup);
                     }
                 }
             }
         });
-    </script>
+    }
+
+    function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
+
+    // Initial Load
+    loadMapData();
+</script>
+
 </body>
 </html>
