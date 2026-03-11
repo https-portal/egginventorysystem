@@ -12,8 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+
 
     <style>
         :root {
@@ -34,7 +34,6 @@
             padding-bottom: 50px;
         }
 
-        /* Top Header */
         .header {
             background: white;
             padding: 15px 20px;
@@ -55,7 +54,6 @@
             padding: 0 15px;
         }
 
-        /* Form Card */
         .card {
             background: var(--card);
             border-radius: 20px;
@@ -96,7 +94,6 @@
             box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
         }
 
-        /* Price Highlight */
         .price-box {
             background: var(--primary-light);
             padding: 15px;
@@ -110,11 +107,7 @@
         .price-box div p { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
         .price-box div h4 { font-size: 1.1rem; color: var(--primary); font-weight: 800; }
 
-        /* Map Styling */
-        #map { height: 220px; width: 100%; border-radius: 15px; margin-bottom: 10px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .address-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
-
-        /* Buttons */
+      
         .btn-primary {
             width: 100%;
             padding: 16px;
@@ -134,19 +127,10 @@
 
         .btn-primary:hover { background: #4338ca; transform: translateY(-2px); }
 
-        .btn-back {
-            width: 100%;
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary-light);
-            padding: 12px;
-            border-radius: 12px;
-            margin-top: 20px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
         .error-msg { color: #ef4444; text-align: center; font-size: 0.85rem; margin-top: 10px; display: none; }
+        
+        /* Utility for hiding address */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -173,6 +157,17 @@
                 <div class="field-wrapper">
                     <i class="fas fa-phone"></i>
                     <input type="text" id="contact" placeholder="Mobile Number">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Order Type</label>
+                <div class="field-wrapper">
+                    <i class="fas fa-truck"></i>
+                    <select id="order-type" onchange="toggleLocationSection()">
+                        <option value="delivery">Delivery</option>
+                        <option value="pickup">Pick-up (Store Visit)</option>
+                    </select>
                 </div>
             </div>
 
@@ -206,42 +201,34 @@
             </div>
 
             <div class="input-group">
-                <label>Preferred Delivery Date</label>
+                <label id="date-label">Preferred Delivery Date</label>
                 <div class="field-wrapper">
                     <i class="fas fa-calendar-alt"></i>
                     <input type="date" id="delivery-schedule">
                 </div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="section-title"><i class="fas fa-map-marker-alt"></i> Delivery Location</div>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Tap on the map to pin your exact location.</p>
-            
-          <div class="input-group">
-    <label>House/Street/Landmark (Manual Address)</label>
-    <div class="field-wrapper">
-        <i class="fas fa-home"></i>
-        <input type="text" id="manual-address" placeholder="Enter Address">
+<div class="card" id="location-section">
+    <div class="section-title"><i class="fas fa-map-marker-alt"></i> Delivery Address</div>
+    <div class="input-group">
+        <label>Complete Address (House #, Street, Barangay, City)</label>
+        <div class="field-wrapper">
+            <i class="fas fa-home"></i>
+            <input type="text" id="manual-address" placeholder="Enter your full address">
+        </div>
     </div>
 </div>
-
-<p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Tap on the map to pin your exact location.</p>
-<div id="map"></div>
             
-            <div class="address-text">
-                <i class="fas fa-info-circle"></i> <span id="address-field">Click map to get address</span>
-            </div>
+            
+            
 
+        <div class="card">
             <input type="hidden" id="location-field">
-
             <button class="btn-primary" onclick="reserveEggs()">
                 Confirm Reservation <i class="fas fa-check-circle"></i>
             </button>
             <div class="error-msg" id="error"></div>
         </div>
-
-      
     </div>
 
 <script>
@@ -259,9 +246,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let inventoryData = {};
-let selectedLatLng = {lat: 10.3157, lng: 123.8854}; // Default Cebu
 
-// Load Inventory automatically
 loadInventory();
 
 function loadInventory() {
@@ -270,7 +255,6 @@ function loadInventory() {
             inventoryData = snapshot.val();
             const eggSelect = document.getElementById('egg-size');
             eggSelect.innerHTML = '<option value="">Select size</option>';
-            
             for (const key in inventoryData) {
                 const option = document.createElement('option');
                 option.value = key;
@@ -282,27 +266,19 @@ function loadInventory() {
     });
 }
 
-// Leaflet Map Init
-const map = L.map('map').setView([selectedLatLng.lat, selectedLatLng.lng], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let marker = L.marker([selectedLatLng.lat, selectedLatLng.lng], { draggable: true }).addTo(map);
-
-map.on('click', e => updateMapPosition(e.latlng));
-marker.on('dragend', e => updateMapPosition(marker.getLatLng()));
-
-function updateMapPosition(latlng) {
-    selectedLatLng = latlng;
-    marker.setLatLng(latlng);
-    document.getElementById('location-field').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-    updateAddressText(latlng.lat, latlng.lng);
-}
-
-function updateAddressText(lat, lng) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('address-field').innerText = data.display_name || "Address not found";
-        });
+// MAO KINI ANG MO-TAGO SA ADDRESS BOX
+function toggleLocationSection() {
+    const type = document.getElementById('order-type').value;
+    const locationSection = document.getElementById('location-section');
+    const dateLabel = document.getElementById('date-label');
+    
+    if (type === 'pickup') {
+        locationSection.classList.add('hidden'); // I-hide ang address box
+        dateLabel.innerText = "Preferred Pick-up Date";
+    } else {
+        locationSection.classList.remove('hidden'); // I-pakita ang address box
+        dateLabel.innerText = "Preferred Delivery Date";
+    }
 }
 
 document.getElementById('egg-size').addEventListener('change', calculatePrice);
@@ -312,65 +288,83 @@ function calculatePrice() {
     const size = document.getElementById('egg-size').value;
     const trays = parseInt(document.getElementById('tray-count').value) || 0;
     let pricePerTray = (size && inventoryData[size]) ? inventoryData[size].price : 0;
-    
     document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
     document.getElementById('total-price').innerText = `₱${trays * pricePerTray}`;
 }
+
 function reserveEggs() {
     const errorEl = document.getElementById('error');
     const name = document.getElementById('name').value.trim();
     const contact = document.getElementById('contact').value.trim();
+    const orderType = document.getElementById('order-type').value;
     const size = document.getElementById('egg-size').value;
     const trays = parseInt(document.getElementById('tray-count').value) || 0;
-    const schedule = document.getElementById('delivery-schedule').value; 
-    
-    // Address Inputs
+    const schedule = document.getElementById('delivery-schedule').value;
     const manualAddress = document.getElementById('manual-address').value.trim();
-    const mapAddress = document.getElementById('address-field').innerText;
 
-    // Validation
-    if (!name || !contact || !size || trays <= 0 || !schedule || !manualAddress || mapAddress.includes("Click map")) {
-        errorEl.innerText = "⚠️ Please complete all details, including manual address and map pin.";
+    // 1. Validation
+    if (!name || !contact || !size || trays <= 0 || !schedule) {
+        errorEl.innerText = "⚠️ Please complete the order details.";
         errorEl.style.display = "block";
         return;
     }
 
-
-    const fullAddress = `${manualAddress} | (${mapAddress})`;
-
-    const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    const time = now.toLocaleTimeString('en-GB').replace(/:/g, '-');
-
-    const pricePerTray = inventoryData[size].price;
-    const totalPrice = trays * pricePerTray;
-
-    // Save to Firebase
-    database.ref(`reservation/${date}/${time}`).set({ 
-        name: name,
-        contact: contact,
-        size: size,
-        trays: trays,
-        price_per_tray: pricePerTray,
-        total_price: totalPrice,
-        delivery_schedule: schedule,
-        location: selectedLatLng,
-        manual_address: manualAddress,
-        map_address: mapAddress,
-        full_address: fullAddress,
-        status: "Pending",
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    }).then(() => {
-        alert("Reservation successful! We will contact you soon.");
-        location.reload(); 
-    }).catch(err => {
-        errorEl.innerText = "Error: " + err.message;
+    // Validation para sa Delivery Address
+    if (orderType === 'delivery' && !manualAddress) {
+        errorEl.innerText = "⚠️ Please enter your delivery address.";
         errorEl.style.display = "block";
+        return;
+    }
+
+    // 2. Sequence Number Logic
+    database.ref('reservation_id/last_reservation_id').transaction((currentCount) => {
+        return (currentCount || 0) + 1;
+    }, (error, committed, snapshot) => {
+        if (committed) {
+            const count = snapshot.val();
+            const customUID = "S" + count.toString().padStart(3, '0');
+
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+            
+            const reservationData = {
+                reservation_id: customUID,
+                name: name,
+                contact: contact,
+                order_type: orderType,
+                size: size,
+                trays: trays,
+                price_per_tray: inventoryData[size].price,
+                total_price: trays * inventoryData[size].price,
+                schedule_date: schedule,
+                status: "Pending",
+                address: (orderType === 'delivery') ? manualAddress : "Pick-Up"
+            };
+
+            database.ref(`reservation/${date}/${time}`).push(reservationData).then(() => {
+                alert(`Reservation successful! Order ID: ${customUID}`);
+                location.reload();
+            }).catch(err => {
+                errorEl.innerText = err.message;
+                errorEl.style.display = "block";
+            });
+        }
     });
 }
 
-function goBack() {
-    window.location.href = "index.html";
+
+// Ibutang ni sa tanang files para automatic ang highlight
+const currentLocation = location.href; 
+const menuItem = document.querySelectorAll('.nav-link');
+const menuLength = menuItem.length;
+
+for (let i = 0; i < menuLength; i++) {
+    if (menuItem[i].href === currentLocation) {
+        menuItem[i].className += " active";
+    } else {
+        menuItem[i].classList.remove("active");
+    }
 }
 </script>
 </body>

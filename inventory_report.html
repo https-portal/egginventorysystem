@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bakafa | Sales Report</title> 
+    <title>Bakafa | Inventory Report</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -26,6 +26,7 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--background); margin: 0; display: flex; min-height: 100vh; }
 
+        /* --- Sidebar Navigation (Uniform) --- */
         .sidebar {
             width: 260px; background: var(--sidebar); color: white; padding: 2rem 1rem;
             display: flex; flex-direction: column; position: fixed; height: 100vh;
@@ -50,7 +51,7 @@
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        .main-content { flex: 1; margin-left: 260px; padding: 1.5rem; width: 100%; box-sizing: border-box; transition: 0.3s; }
+        .main-content { flex: 1; margin-left: 260px; padding: 1.5rem; width: 100%; box-sizing: border-box; }
         @media (max-width: 768px) { .main-content { margin-left: 0; padding: 1rem; } }
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -63,25 +64,13 @@
             display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;
         }
 
-        .filter-group { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 0.8rem; font-weight: 600; color: var(--secondary); }
-        input[type="date"] { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; box-sizing: border-box; }
-
-        .btn-group { display: flex; gap: 10px; width: 100%; }
-        .btn-generate, .btn-excel { 
-            flex: 1; padding: 12px; border: none; border-radius: 8px; 
-            cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s;
+        .btn-excel { 
+            padding: 12px 24px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: 600; background: var(--success); color: white;
         }
-        .btn-generate { background: var(--primary); color: white; }
-        .btn-excel { background: var(--success); color: white; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-        .stat-card { background: white; padding: 1.2rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
-        .stat-card h3 { font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; margin: 0; }
-        .stat-card .value { font-size: 1.5rem; font-weight: 700; margin-top: 5px; color: #1e293b; }
 
         .table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: #f8fafc; padding: 14px; text-align: left; font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; color: #334155; }
 
@@ -111,53 +100,29 @@
 <div class="main-content">
     <header>
         <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
-        <div>
-            <h1 style="margin:0; font-size: 1.5rem;">Sales Report</h1>
-            <p style="margin:0; color: var(--secondary); font-size: 0.85rem;">Completed (Delivered/Picked Up) orders.</p>
-        </div>
+        <h1>Inventory Stock Report</h1>
     </header>
 
     <div class="report-header">
-        <div class="filter-group">
-            <label>From Date</label>
-            <input type="date" id="date-from">
-        </div>
-        <div class="filter-group">
-            <label>To Date</label>
-            <input type="date" id="date-to">
-        </div>
-        <div class="btn-group">
-            <button class="btn-generate" onclick="generateReport()">Generate</button>
-            <button class="btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Excel</button>
-        </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-card" style="border-top: 4px solid var(--primary);">
-            <h3>Total Sales (Revenue)</h3>
-            <div class="value" id="total-sales">₱0</div>
-        </div>
-        <div class="stat-card" style="border-top: 4px solid var(--success);">
-            <h3>Completed Transactions</h3>
-            <div class="value" id="count-completed">0</div>
-        </div>
+        <input type="date" id="report-date" onchange="loadInventoryReport()" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <button class="btn-excel" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export to Excel</button>
     </div>
 
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>Sales ID</th>
-                    <th>Date of Sale</th>
-                    <th>Customer</th>
-                    <th>Egg Type</th>
-                    <th>Qty (Trays)</th>
-                    <th>Price</th>
-                    <th>Total Amount</th>
-                    <th>Type</th>
+                    <th>Inv ID</th>
+                    <th>Egg Size</th>
+                    <th>Beginning</th>
+                    <th>Added (Prod)</th>
+                    <th>Reserved</th>
+                    <th>Sold</th>
+                    <th>Remaining</th>
+                    <th>Date Updated</th>
                 </tr>
             </thead>
-            <tbody id="report-body"></tbody>
+            <tbody id="inventory-body"></tbody>
         </table>
     </div>
 </div>
@@ -180,80 +145,107 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let reportData = [];
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date-from').value = today;
-    document.getElementById('date-to').value = today;
+    const idMapping = {
+        "small": "I001", "medium": "I002", "large": "I003",
+        "extra_large": "I004", "jumbo": "I005", "cracked": "I006"
+    };
 
-    async function generateReport() {
-        const fromDate = document.getElementById('date-from').value;
-        const toDate = document.getElementById('date-to').value;
-        const body = document.getElementById('report-body');
-        
-        let totalSales = 0, completedCount = 0;
-        reportData = [];
-        body.innerHTML = "<tr><td colspan='8' style='text-align:center'>Loading...</td></tr>";
+    document.getElementById('report-date').value = new Date().toISOString().split('T')[0];
 
-        db.ref("reservation").once("value", snapshot => {
+    function loadInventoryReport() {
+        const selectedDate = document.getElementById('report-date').value;
+        const body = document.getElementById('inventory-body');
+        body.innerHTML = "<tr><td colspan='8' style='text-align:center'>Calculating...</td></tr>";
+
+        db.ref().once("value", snapshot => {
+            const data = snapshot.val();
+            const inv = data.inventory;
+            const prod = data.production ? data.production[selectedDate] : null;
+            const reservations = data.reservation;
+            
             body.innerHTML = "";
-            if(snapshot.exists()){
-                const data = snapshot.val();
-                for(const date in data){
-                    if(date >= fromDate && date <= toDate){
-                        for(const time in data[date]){
-                            for(const uid in data[date][time]){
-                                const r = data[date][time][uid];
-                                
-                                // Logic: I-apil lang ang Approved AND (Delivered OR Picked Up)
-                                const isCompleted = r.status === "Approved" && (r.delivery_status === "Delivered" || r.delivery_status === "Picked Up");
+            let reportArray = [];
 
-                                if (isCompleted) {
-                                    reportData.push({
-                                        "Sales Id": r.reservation_id || "N/A",
-                                        "Customer Name": r.name,
-                                        "Date of Sale": date,
-                                        "Egg Type": r.size,
-                                        "Quantity": r.trays,
-                                        "Price": r.price_per_tray,
-                                        "Total Price": r.total_price
-                                    });
+            for (const size in inv) {
+                let added = 0;
+                if (prod && prod[size]) added = prod[size].quantity;
 
-                                    totalSales += r.total_price;
-                                    completedCount++;
-                                    
-                                    body.innerHTML += `
-                                        <tr>
-                                            <td>${r.reservation_id || '---'}</td>
-                                            <td>${date}</td>
-                                            <td>${r.name}</td>
-                                            <td>${r.size}</td>
-                                            <td>${r.trays}</td>
-                                            <td>₱${(r.price_per_tray || 0).toLocaleString()}</td>
-                                            <td>₱${r.total_price.toLocaleString()}</td>
-                                            <td><span style="color:var(--success); font-weight:700;">${r.delivery_status}</span></td>
-                                        </tr>`;
+                let reserved = 0;
+                let sold = 0;
+
+                // Calculate Sold and Reserved from ALL reservations up to selectedDate
+                for (const d in reservations) {
+                    if (d <= selectedDate) {
+                        for (const t in reservations[d]) {
+                            for (const uid in reservations[d][t]) {
+                                const r = reservations[d][t][uid];
+                                if (r.size === size && r.status === "Approved") {
+                                    if (r.delivery_status === "Delivered" || r.delivery_status === "Picked Up") {
+                                        sold += r.trays;
+                                    } else {
+                                        reserved += r.trays;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                const remaining = inv[size].quantity;
+                // Formula: Beginning = Current - Added + Sold + Reserved
+                // Note: Sold and Reserved are in trays, inventory quantity might be in pieces based on your previous 'approve' logic.
+                // Assuming inventory quantity is stored in PIECES (24 per tray) except for cracked.
+                
+                let soldInUnits = (size === "cracked") ? sold : sold * 24;
+                let reservedInUnits = (size === "cracked") ? reserved : reserved * 24;
+            let addedInUnits = added;
+
+                const beginning = remaining - addedInUnits + soldInUnits + reservedInUnits;
+
+                const row = {
+                    id: idMapping[size] || "I---",
+                    size: size.replace('_', ' ').toUpperCase(),
+                    beg: beginning,
+                    add: addedInUnits,
+                    res: reservedInUnits,
+                    sold: soldInUnits,
+                    rem: remaining,
+                    date: selectedDate
+                };
+
+                reportArray.push(row);
+
+                body.innerHTML += `
+                    <tr>
+                        <td>${row.id}</td>
+                        <td><strong>${row.size}</strong></td>
+                        <td>${row.beg}</td>
+                        <td>${row.add}</td>
+                        <td>${row.res}</td>
+                        <td>${row.sold}</td>
+                        <td><span style="font-weight:700; color:var(--primary)">${row.rem}</span></td>
+                        <td>${row.date}</td>
+                    </tr>
+                `;
             }
-            if(reportData.length === 0) body.innerHTML = "<tr><td colspan='8' style='text-align:center'>No completed sales found for this range.</td></tr>";
-            document.getElementById('total-sales').innerText = "₱" + totalSales.toLocaleString();
-            document.getElementById('count-completed').innerText = completedCount;
+            window.currentReportData = reportArray;
         });
     }
 
     function exportToExcel() {
-        if(reportData.length === 0) return alert("Walay data nga i-export!");
-        const ws = XLSX.utils.json_to_sheet(reportData);
+        const data = window.currentReportData;
+        if(!data) return alert("No data to export");
+        const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
-        XLSX.writeFile(wb, `Bakafa_Sales_${document.getElementById('date-from').value}_to_${document.getElementById('date-to').value}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Inventory Report");
+        XLSX.writeFile(wb, `Inventory_Report_${document.getElementById('report-date').value}.xlsx`);
     }
 
     function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
-    generateReport();
+    
+    
+    loadInventoryReport();
+
 
 function highlightMenu() {
     // 1. Kuhaon ang filename gikan sa URL (e.g. "inventory.html")
@@ -278,7 +270,6 @@ function highlightMenu() {
 
 // Siguroha nga mo-dagan ang function inig load sa page
 document.addEventListener("DOMContentLoaded", highlightMenu);
-
 </script>
 </body>
 </html>

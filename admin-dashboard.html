@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -278,29 +279,25 @@
 
 <body>
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    <nav class="sidebar" id="sidebar">
-        <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
-        
-        <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
-        <a href="inventory.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
-        <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
-        <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
-        <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
-        <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
-        <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
-        
-        <button class="logout-btn" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-    </nav>
-
+<nav class="sidebar" id="sidebar">
+    <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
+    <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="inventory_report.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Inventory Report</a>
+    <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
+    <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
+    <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</nav>
     <div class="main-content">
         <header>
             <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
             <h1>Reservations</h1>
             <small id="date-display" style="display: block; font-size: 0.7rem; color: var(--secondary)"></small>
         </header>
+
+        
 
         <div class="stats-grid">
             <div class="stat-card">
@@ -315,6 +312,12 @@
                 <h3>Delivered</h3>
                 <div class="value" id="delivered">0</div>
             </div>
+
+ <div class="stat-card" style="border-color: var(--success);">
+                <h3>Picked-Up</h3>
+                <div class="value" id="pickedup">0</div>
+            </div>
+            
         </div>
 
         <div class="sales-banner">
@@ -325,6 +328,10 @@
             <div class="sales-amount" id="sales" style="font-size: 2.2rem; font-weight: 700; color: #22c55e;">₱0</div>
         </div>
 
+        <button class="map-trigger" onclick="generateExcel()" style="background: var(--success);">
+    <i class="fas fa-file-excel"></i> Generate Summary Report
+</button>
+
         <div class="toolbar">
             <div style="width: 100%;">
                 <input type="date" id="date-filter">
@@ -332,6 +339,7 @@
             <div class="search-wrapper">
                 <i class="fas fa-search"></i>
                 <input type="text" id="search" placeholder="Search customer...">
+                
             </div>
             <select id="filter" style="flex: 1; min-width: 150px;">
                 <option value="all">All Statuses</option>
@@ -341,20 +349,27 @@
             <button class="map-trigger" onclick="openMap()">View Map</button>
         </div>
 
+
+
+        
         <div class="table-container">
             <table>
                 <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Product</th>
-                        <th>Trays</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Schedule</th>
-                        <th>Delivery</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th>Customer Name</th>
+        <th>Contact Number</th>
+        <th>Order Type</th>
+        <th>Delivery/Pick Up Date</th>
+        <th>Address</th>
+        <th>Egg Type/Size</th>
+        <th>Quantity (Trays)</th>
+        <th>Total Price</th>
+        <th>Status</th>
+        <th>Delivery Status</th>
+        <th>Processed By</th>
+        <th>Actions</th>
+    </tr>
+</thead>
                 <tbody id="table-body"></tbody>
             </table>
         </div>
@@ -388,33 +403,46 @@
         });
 
         function loadReservations(){
-            db.ref("reservation").on("value",snapshot=>{
-                reservations=[];
-                let total=0,pending=0,sales=0,delivered=0,outForDelivery=0;
+    db.ref("reservation").on("value", snapshot => {
+        reservations = [];
+        // I-initialize ang pickedup variable diri
+        let total = 0, pending = 0, sales = 0, delivered = 0, pickedup = 0; 
 
-                if(snapshot.exists()){
-                    const data=snapshot.val();
-                    for(const date in data)
-                        for(const time in data[date])
-                            for(const uid in data[date][time]){
-                                const r=data[date][time][uid];
-                                if(!r.delivery_status) r.delivery_status="Pending";
-                                reservations.push({date,time,uid,...r});
-                                total++;
-                                if(r.status==="Pending") pending++;
-                                if(r.status==="Approved"){ sales+=r.total_price; }
-                                if(r.delivery_status === "Delivered") delivered++;
-                                if(r.delivery_status === "Out for Delivery") outForDelivery++;
-                            }
+        if(snapshot.exists()){
+            const data = snapshot.val();
+            for(const date in data) {
+                for(const time in data[date]) {
+                    for(const uid in data[date][time]){
+                        const r = data[date][time][uid];
+                        if(!r.delivery_status) r.delivery_status = "Pending";
+                        
+                        reservations.push({date, time, uid, ...r});
+                        total++;
+
+                        if(r.status === "Pending") pending++;
+                        if(r.status === "Approved") sales += r.total_price;
+                        
+                        // SEPARATE COUNTING LOGIC
+                        if(r.delivery_status === "Delivered") {
+                            delivered++;
+                        } else if(r.delivery_status === "Picked Up") {
+                            pickedup++;
+                        }
+                    }
                 }
-
-                document.getElementById("total").innerText = total;
-                document.getElementById("pending").innerText = pending;
-                document.getElementById("delivered").innerText = delivered; 
-                document.getElementById("sales").innerText = "₱" + sales.toLocaleString(); 
-                renderTable();
-            });
+            }
         }
+
+        // I-display ang mga values sa HTML
+        document.getElementById("total").innerText = total;
+        document.getElementById("pending").innerText = pending;
+        document.getElementById("delivered").innerText = delivered; 
+        document.getElementById("pickedup").innerText = pickedup; // Display sa bag-ong card
+        document.getElementById("sales").innerText = "₱" + sales.toLocaleString(); 
+        
+        renderTable();
+    });
+}
 
         function renderTable(){
             const body=document.getElementById("table-body");
@@ -423,47 +451,90 @@
             const dateFilter = document.getElementById("date-filter").value;
             body.innerHTML="";
 
-            reservations.forEach(r=>{
-                if(dateFilter && r.date !== dateFilter) return; 
-                if(filter!=="all" && r.status!==filter) return;
-                if(!r.name.toLowerCase().includes(search)) return;
+            reservations.forEach(r => {
+    if (dateFilter && r.date !== dateFilter) return;
+    if (filter !== "all" && r.status !== filter) return;
+    if (!r.name.toLowerCase().includes(search)) return;
 
-                const row=document.createElement("tr");
-                row.innerHTML=`
-                    <td data-label="Customer">
-                        <strong>${r.name}</strong><br>
-                        <small>${r.contact}</small>
-                    </td>
-                    <td data-label="Product">${r.size}</td>
-                    <td data-label="Trays">${r.trays}</td>
-                    <td data-label="Total">₱${r.total_price}</td>
-                    <td data-label="Status"><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
-                    <td data-label="Schedule">${r.delivery_date || r.delivery_schedule}</td>
-                    <td data-label="Delivery">
-                        <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)">
-                            <option value="Pending" ${r.delivery_status==="Pending"?"selected":""}>Pending</option>
-                            <option value="Out for Delivery" ${r.delivery_status==="Out for Delivery"?"selected":""}>Out</option>
-                            <option value="Delivered" ${r.delivery_status==="Delivered"?"selected":""}>Delivered</option>
-                        </select>
-                    </td>
-                    <td class="action-btns">
-                        <button class="btn-map" onclick="viewMap(${r.location.lat},${r.location.lng})"><i class="fas fa-location-dot"></i></button>
-                        <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})"><i class="fas fa-check"></i></button>
-                        <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                `;
-                body.appendChild(row);
-            });
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td data-label="Customer Name"><strong>${r.name}</strong></td>
+        <td data-label="Contact Number">${r.contact}</td>
+        <td data-label="Order Type">${r.order_type}</td>
+        <td data-label="Delivery/Pick Up Date">${r.schedule_date}</td>
+         <td data-label="Delivery/Pick Up Date">${r.address}</td>
+        <td data-label="Egg Type/Size">${r.size.replace('_', ' ')}</td>
+        <td data-label="Quantity">${r.trays}</td>
+        <td data-label="Total Price">₱${r.total_price.toLocaleString()}</td>
+        <td data-label="Status"><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
+       <td data-label="Delivery Status">
+    <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)">
+        ${r.order_type === 'pickup' ? `
+            <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
+            <option value="Picked Up" ${r.delivery_status === "Pickedup" ? "selected" : ""}>Picked Up</option>
+        ` : `
+            <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
+            <option value="Out for Delivery" ${r.delivery_status === "Out for Delivery" ? "selected" : ""}>Out</option>
+            <option value="Delivered" ${r.delivery_status === "Delivered" ? "selected" : ""}>Delivered</option>
+        `}
+    </select>
+</td>
+        <td data-label="Processed By"><small>${r.processed_by || '---'}</small></td>
+        <td class="action-btns">
+        
+            <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})"><i class="fas fa-check"></i></button>
+            <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')"><i class="fas fa-trash"></i></button>
+        </td>
+    `;
+    body.appendChild(row);
+});
         }
 
-        function approve(date, time, uid, size, quantity) {
-            const isCracked = size.toLowerCase().includes('cracked');
-            const totalToDeduct = isCracked ? quantity : quantity * 24;
-            db.ref(`inventory/${size}/quantity`).transaction(c => c >= totalToDeduct ? c - totalToDeduct : undefined, (err, comm) => {
-                if(comm) db.ref(`reservation/${date}/${time}/${uid}`).update({status:"Approved"});
-                else alert("Insufficient stock!");
+
+function approve(date, time, uid, size, quantity) {
+    const adminEmail = firebase.auth().currentUser ? firebase.auth().currentUser.email : "Admin";
+    
+    const dbSizeKey = size.toLowerCase().trim().replace(/\s+/g, '_'); 
+    const traysOrdered = Number(quantity);
+    
+    // LOGIC: Kung cracked, quantity ra. Kung dili, quantity * 24.
+    let totalToDeduct;
+    if (dbSizeKey === "cracked") {
+        totalToDeduct = traysOrdered; 
+    } else {
+        totalToDeduct = traysOrdered * 24;
+    }
+
+    const inventoryRef = firebase.database().ref(`inventory/${dbSizeKey}/quantity`);
+    const reservationRef = firebase.database().ref(`reservation/${date}/${time}/${uid}`);
+
+    console.log(`Deducting ${totalToDeduct} pieces from inventory/${dbSizeKey}`);
+
+    inventoryRef.transaction((currentStock) => {
+        if (currentStock === null) return currentStock; 
+
+        if (currentStock >= totalToDeduct) {
+            return currentStock - totalToDeduct;
+        } else {
+            return; // Cancel if insufficient
+        }
+    }, (error, committed, snapshot) => {
+        if (error) {
+            alert("Database Error: " + error.message);
+        } else if (!committed) {
+            const val = snapshot.val();
+            alert(`Insufficient Stock!\nAvailable: ${val} pcs\nNeeded: ${totalToDeduct} pcs`);
+        } else {
+            // SUCCESS
+            reservationRef.update({
+                status: "Approved",
+                processed_by: adminEmail
+            }).then(() => {
+                alert(`Approved! Deducted ${totalToDeduct} pieces from ${dbSizeKey} stock.`);
             });
         }
+    });
+}
 
         function reject(date,time,uid){ if(confirm("Reject this?")) db.ref(`reservation/${date}/${time}/${uid}`).update({status:"Rejected"}); }
         function updateDeliveryStatus(date,time,uid,v){ db.ref(`reservation/${date}/${time}/${uid}`).update({delivery_status:v}); }
@@ -476,6 +547,64 @@
         document.getElementById("date-filter").addEventListener("change", renderTable);
         document.getElementById("date-display").innerText = new Date().toDateString();
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+
+
+
+
+
+function generateExcel() {
+    const table = document.querySelector("table");
+    // We create a clean data array for Excel (excluding the Actions column)
+    const data = reservations.map(r => ({
+     
+        "Customer Name": r.name,
+        "Contact Number":r.contact,
+         "Reservation Date": r.date,
+         "Picked-Up/Delivery Date":r.schedule_date,
+        "Egg Type": r.size,
+        "Quantity": r.trays,
+        "Price":r.price_per_tray,
+        "Total Price": r.total_price,
+        "Status":r.status,
+        "Processed By": r.processed_by || "N/A"
+
+
+
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reservations");
+    
+    // Download file
+    XLSX.writeFile(workbook, `Bakafa_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function highlightMenu() {
+    // 1. Kuhaon ang filename gikan sa URL (e.g. "inventory.html")
+    const path = window.location.pathname;
+    const page = path.split("/").pop() || "admin-dashboard.html"; // Default kung empty
+
+    // 2. Pangitaon tanang links sa sidebar
+    const menuLinks = document.querySelectorAll('.nav-link');
+    
+    menuLinks.forEach(link => {
+        // 3. Kuhaon ang "href" sa link (e.g. "inventory.html")
+        const href = link.getAttribute("href");
+        
+        // 4. I-check kung nag-match ang page sa link
+        if (page === href) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+// Siguroha nga mo-dagan ang function inig load sa page
+document.addEventListener("DOMContentLoaded", highlightMenu);
+
+
     </script>
 </body>
 </html>

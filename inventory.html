@@ -76,14 +76,14 @@
 
 <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-<nav class="sidebar" id="sidebar">
+ <nav class="sidebar" id="sidebar">
     <h2><i class="fas fa-egg"></i> Bakafa Farm</h2>
     <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
-    <a href="inventory.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
+    <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
     <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="inventory_report.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Inventory Report</a>
     <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
     <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
-    <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
     <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
@@ -222,52 +222,98 @@
         });
     });
 
-    async function viewHistory(size) {
-        const historyContainer = document.getElementById('history-container');
-        document.getElementById('historyTitle').innerText = `${size.replace('_',' ').toUpperCase()}`;
-        historyContainer.innerHTML = "Loading...";
-        document.getElementById('historyModal').style.display = 'flex';
+async function viewHistory(size) {
+    const historyContainer = document.getElementById('history-container');
+    document.getElementById('historyTitle').innerText = `${size.replace('_',' ').toUpperCase()}`;
+    historyContainer.innerHTML = "Loading...";
+    document.getElementById('historyModal').style.display = 'flex';
 
-        let historyData = [];
-        const prodSnap = await db.ref("production").once("value");
-        if (prodSnap.exists()) {
-            const data = prodSnap.val();
-            for (const date in data) {
-                if (data[date][size]) {
-                    historyData.push({ date, qty: data[date][size].quantity, type: 'Production', class: 'type-add', prefix: '+' });
-                }
+    let historyData = [];
+    
+    // 1. PRODUCTION LOGS (Kani ang per piece na)
+    const prodSnap = await db.ref("production").once("value");
+    if (prodSnap.exists()) {
+        const data = prodSnap.val();
+        for (const date in data) {
+            if (data[date][size]) {
+                // AYAW na i-multiply og 24 diri kay per piece na ang naa sa DB
+                historyData.push({ 
+                    date, 
+                    qty: data[date][size].quantity, 
+                    type: 'Production', 
+                    class: 'type-add', 
+                    prefix: '+' 
+                });
             }
         }
+    }
 
-        const resSnap = await db.ref("reservation").once("value");
-        if (resSnap.exists()) {
-            const data = resSnap.val();
-            for (const date in data) {
-                for (const time in data[date]) {
-                    for (const uid in data[date][time]) {
-                        const r = data[date][time][uid];
-                        if (r.status === "Approved" && r.size === size) {
-                            const deducted = r.deducted_pieces || (r.trays * 24);
-                            historyData.push({ date, qty: deducted, type: `Sold: ${r.name}`, class: 'type-sub', prefix: '-' });
-                        }
+    // 2. RESERVATION/SALES LOGS (Kani trays gihapon ang input sa user)
+    const resSnap = await db.ref("reservation").once("value");
+    if (resSnap.exists()) {
+        const data = resSnap.val();
+        for (const date in data) {
+            for (const time in data[date]) {
+                for (const uid in data[date][time]) {
+                    const r = data[date][time][uid];
+                    if (r.status === "Approved" && r.size === size) {
+                        // Kung ang itlog dili cracked, i-multiply ang trays sa 24 
+                        // para ma-minus sa per-piece inventory
+                        let deducted = (size === "cracked") ? r.trays : r.trays * 24;
+                        
+                        historyData.push({ 
+                            date, 
+                            qty: deducted, 
+                            type: `Sold: ${r.name}`, 
+                            class: 'type-sub', 
+                            prefix: '-' 
+                        });
                     }
                 }
             }
         }
-
-        historyData.sort((a, b) => new Date(b.date) - new Date(a.date));
-        historyContainer.innerHTML = historyData.length > 0 ? "" : "No history found.";
-        historyData.forEach(item => {
-            historyContainer.innerHTML += `
-                <div class="history-item">
-                    <span><strong>${item.date}</strong><br><small>${item.type}</small></span>
-                    <span class="${item.class}">${item.prefix}${item.qty} Pcs</span>
-                </div>`;
-        });
     }
 
+    // Sorting and Displaying
+    historyData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    historyContainer.innerHTML = historyData.length > 0 ? "" : "No history found.";
+    
+    historyData.forEach(item => {
+        historyContainer.innerHTML += `
+            <div class="history-item">
+                <span><strong>${item.date}</strong><br><small>${item.type}</small></span>
+                <span class="${item.class || ''}">${item.prefix}${item.qty} Pcs</span>
+            </div>`;
+    });
+}
     function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
     loadInventory();
+
+function highlightMenu() {
+    // 1. Kuhaon ang filename gikan sa URL (e.g. "inventory.html")
+    const path = window.location.pathname;
+    const page = path.split("/").pop() || "admin-dashboard.html"; // Default kung empty
+
+    // 2. Pangitaon tanang links sa sidebar
+    const menuLinks = document.querySelectorAll('.nav-link');
+    
+    menuLinks.forEach(link => {
+        // 3. Kuhaon ang "href" sa link (e.g. "inventory.html")
+        const href = link.getAttribute("href");
+        
+        // 4. I-check kung nag-match ang page sa link
+        if (page === href) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+// Siguroha nga mo-dagan ang function inig load sa page
+document.addEventListener("DOMContentLoaded", highlightMenu);
+
+
 </script>
 </body>
 </html>

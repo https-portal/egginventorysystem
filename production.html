@@ -121,9 +121,9 @@
     <a href="admin-dashboard.html" class="nav-link"><i class="fas fa-th-large"></i> Dashboard</a>
     <a href="inventory.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> View Inventory</a>
     <a href="sales-report.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Sales Report</a>
+    <a href="inventory_report.html" class="nav-link"><i class="fas fa-clipboard-list"></i> Inventory Report</a>
     <a href="admin-calendar.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Delivery Calendar</a>
-    <a href="production.html" class="nav-link active"><i class="fas fa-plus-circle"></i> Add Production</a>
-    <a href="admin-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Delivery Map</a>
+    <a href="production.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Production</a>
     <a href="production_report.html" class="nav-link"><i class="fas fa-file-contract"></i> Production Report</a>
     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </nav>
@@ -152,10 +152,9 @@
                 </select>
             </div>
             
-            <div class="form-group">
-                <label>Quantity (Trays)</label>
-                <input type="number" id="qty" placeholder="0">
-            </div>
+       <div class="form-group">
+    <label>Quantity (Pieces)</label> <input type="number" id="qty" placeholder="e.g. 30">
+</div>
 
             <div class="form-group">
                 <label>Date</label>
@@ -219,24 +218,26 @@
     }
 
     function saveProduction(){
-        const size = document.getElementById("size").value;
-        const qty = parseInt(document.getElementById("qty").value);
-        const selectedDate = document.getElementById("date").value;
+    const size = document.getElementById("size").value;
+    const qty = parseInt(document.getElementById("qty").value); // Inputted as pieces
+    const selectedDate = document.getElementById("date").value;
 
-        if(!size || !qty || !selectedDate) return alert("Please complete fields");
+    if(!size || !qty || !selectedDate) return alert("Please complete fields");
 
-        db.ref(`production/${selectedDate}/${size}`).transaction(current => {
-            if(current === null) return {quantity: qty};
-            current.quantity += qty;
-            return current;
-        });
+    // I-update ang Production Node (Per Piece na ni)
+    db.ref(`production/${selectedDate}/${size}`).transaction(current => {
+        if(current === null) return {quantity: qty};
+        current.quantity += qty;
+        return current;
+    });
 
-        db.ref(`inventory/${size}/quantity`).transaction(stock => (stock || 0) + qty);
+    // I-update ang Inventory Node (Pieces na ang sulod ani)
+    db.ref(`inventory/${size}/quantity`).transaction(stock => (stock || 0) + qty);
 
-        document.getElementById("msg").innerText = "✓ Updated Successfully";
-        document.getElementById("qty").value = "";
-        setTimeout(() => { document.getElementById("msg").innerText = ""; }, 3000);
-    }
+    document.getElementById("msg").innerText = "✓ Updated Successfully";
+    document.getElementById("qty").value = "";
+    setTimeout(() => { document.getElementById("msg").innerText = ""; }, 3000);
+}
 
     function loadHistory(){
         db.ref("production").on("value", snap => {
@@ -262,6 +263,29 @@
 
     function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
     loadHistory();
+function highlightMenu() {
+    // 1. Kuhaon ang filename gikan sa URL (e.g. "inventory.html")
+    const path = window.location.pathname;
+    const page = path.split("/").pop() || "admin-dashboard.html"; // Default kung empty
+
+    // 2. Pangitaon tanang links sa sidebar
+    const menuLinks = document.querySelectorAll('.nav-link');
+    
+    menuLinks.forEach(link => {
+        // 3. Kuhaon ang "href" sa link (e.g. "inventory.html")
+        const href = link.getAttribute("href");
+        
+        // 4. I-check kung nag-match ang page sa link
+        if (page === href) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
+        }
+    });
+}
+
+// Siguroha nga mo-dagan ang function inig load sa page
+document.addEventListener("DOMContentLoaded", highlightMenu);
 </script>
 </body>
 </html>
