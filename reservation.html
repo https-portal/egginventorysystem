@@ -218,7 +218,16 @@
             <div class="section-title"><i class="fas fa-map-marker-alt"></i> Delivery Location</div>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Tap on the map to pin your exact location.</p>
             
-            <div id="map"></div>
+          <div class="input-group">
+    <label>House/Street/Landmark (Manual Address)</label>
+    <div class="field-wrapper">
+        <i class="fas fa-home"></i>
+        <input type="text" id="manual-address" placeholder="Enter Address">
+    </div>
+</div>
+
+<p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Tap on the map to pin your exact location.</p>
+<div id="map"></div>
             
             <div class="address-text">
                 <i class="fas fa-info-circle"></i> <span id="address-field">Click map to get address</span>
@@ -307,7 +316,6 @@ function calculatePrice() {
     document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
     document.getElementById('total-price').innerText = `₱${trays * pricePerTray}`;
 }
-
 function reserveEggs() {
     const errorEl = document.getElementById('error');
     const name = document.getElementById('name').value.trim();
@@ -315,23 +323,30 @@ function reserveEggs() {
     const size = document.getElementById('egg-size').value;
     const trays = parseInt(document.getElementById('tray-count').value) || 0;
     const schedule = document.getElementById('delivery-schedule').value; 
-    const address = document.getElementById('address-field').innerText;
+    
+    // Address Inputs
+    const manualAddress = document.getElementById('manual-address').value.trim();
+    const mapAddress = document.getElementById('address-field').innerText;
 
-    if (!name || !contact || !size || trays <= 0 || !schedule || address.includes("Click map")) {
-        errorEl.innerText = "⚠️ Please complete all details and pin your location.";
+    // Validation
+    if (!name || !contact || !size || trays <= 0 || !schedule || !manualAddress || mapAddress.includes("Click map")) {
+        errorEl.innerText = "⚠️ Please complete all details, including manual address and map pin.";
         errorEl.style.display = "block";
         return;
     }
 
+
+    const fullAddress = `${manualAddress} | (${mapAddress})`;
+
     const now = new Date();
     const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+    const time = now.toLocaleTimeString('en-GB').replace(/:/g, '-');
 
     const pricePerTray = inventoryData[size].price;
     const totalPrice = trays * pricePerTray;
 
-    // Save using a 'guest' or timestamp ID since login is removed
-    database.ref(`reservation/${date}/${time}`).push({
+    // Save to Firebase
+    database.ref(`reservation/${date}/${time}`).set({ 
         name: name,
         contact: contact,
         size: size,
@@ -340,13 +355,16 @@ function reserveEggs() {
         total_price: totalPrice,
         delivery_schedule: schedule,
         location: selectedLatLng,
-        address: address,
-        status: "Pending"
+        manual_address: manualAddress,
+        map_address: mapAddress,
+        full_address: fullAddress,
+        status: "Pending",
+        timestamp: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
         alert("Reservation successful! We will contact you soon.");
         location.reload(); 
     }).catch(err => {
-        errorEl.innerText = err.message;
+        errorEl.innerText = "Error: " + err.message;
         errorEl.style.display = "block";
     });
 }
