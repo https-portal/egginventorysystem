@@ -342,7 +342,7 @@ async function viewHistory(size) {
         const data = prodSnap.val();
         for (const date in data) {
             if (data[date][size]) {
-                // AYAW na i-multiply og 24 diri kay per piece na ang naa sa DB
+               
                 historyData.push({ 
                     date, 
                     qty: data[date][size].quantity, 
@@ -363,9 +363,8 @@ async function viewHistory(size) {
                 for (const uid in data[date][time]) {
                     const r = data[date][time][uid];
                     if (r.status === "Approved" && r.size === size) {
-                        // Kung ang itlog dili cracked, i-multiply ang trays sa 24 
-                        // para ma-minus sa per-piece inventory
-                        let deducted = (size === "cracked") ? r.trays : r.trays * 24;
+             
+                        let deducted = (size === "cracked") ? r.trays : r.trays * 30;
                         
                         historyData.push({ 
                             date, 

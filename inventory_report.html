@@ -299,10 +299,9 @@ font-size:14px;
                 const remaining = inv[size].quantity;
                 // Formula: Beginning = Current - Added + Sold + Reserved
                 // Note: Sold and Reserved are in trays, inventory quantity might be in pieces based on your previous 'approve' logic.
-                // Assuming inventory quantity is stored in PIECES (24 per tray) except for cracked.
-                
-                let soldInUnits = (size === "cracked") ? sold : sold * 24;
-                let reservedInUnits = (size === "cracked") ? reserved : reserved * 24;
+        
+                let soldInUnits = (size === "cracked") ? sold : sold * 30;
+                let reservedInUnits = (size === "cracked") ? reserved : reserved * 30;
             let addedInUnits = added;
 
                 const beginning = remaining - addedInUnits + soldInUnits + reservedInUnits;
