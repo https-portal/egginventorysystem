@@ -185,7 +185,7 @@
                 <label id="unit-label">Quantity (Trays)</label> 
                 <div class="field-wrapper">
                     <i class="fas fa-hashtag"></i>
-                    <input type="number" id="tray-count" min="1" placeholder="Quantity">
+                    <input type="number" id="tray-count" min="0.5" step="0.5" placeholder="Quantity">
                 </div>
             </div>
 
@@ -286,7 +286,7 @@ document.getElementById('tray-count').addEventListener('input', calculatePrice);
 
 function calculatePrice() {
     const size = document.getElementById('egg-size').value;
-    const trays = parseInt(document.getElementById('tray-count').value) || 0;
+   const trays = parseFloat(document.getElementById('tray-count').value) || 0;
     let pricePerTray = (size && inventoryData[size]) ? inventoryData[size].price : 0;
     document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
     document.getElementById('total-price').innerText = `₱${trays * pricePerTray}`;
@@ -298,7 +298,7 @@ function reserveEggs() {
     const contact = document.getElementById('contact').value.trim();
     const orderType = document.getElementById('order-type').value;
     const size = document.getElementById('egg-size').value;
-    const trays = parseInt(document.getElementById('tray-count').value) || 0;
+    const trays = parseFloat(document.getElementById('tray-count').value) || 0;
     const schedule = document.getElementById('delivery-schedule').value;
     const manualAddress = document.getElementById('manual-address').value.trim();
 

@@ -632,7 +632,7 @@ function approve(date, time, uid, size, quantity) {
     if (dbSizeKey === "cracked") {
         totalToDeduct = traysOrdered; 
     } else {
-        totalToDeduct = traysOrdered * 24;
+        totalToDeduct = traysOrdered * 30;
     }
 
     const inventoryRef = firebase.database().ref(`inventory/${dbSizeKey}/quantity`);

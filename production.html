@@ -229,15 +229,9 @@ font-size:14px;
         <div class="form-grid">
             <div class="form-group">
                 <label>Egg Size</label>
-                <select id="size" onchange="loadStock()">
-                    <option value="">Select Size</option>
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                    <option value="extra_large">Extra Large</option>
-                    <option value="jumbo">Jumbo</option>
-                    <option value="cracked">Cracked</option>
-                </select>
+<select id="size" onchange="loadStock()">
+    <option value="">Select Size</option>
+</select>
             </div>
             
        <div class="form-group">
@@ -450,6 +444,46 @@ window.onclick = function(event) {
     const modal = document.getElementById('passwordModal');
     if (event.target == modal) closePasswordModal();
 }
+
+
+function loadEggSizes(){
+    const select = document.getElementById("size");
+
+    db.ref("inventory").once("value").then(snapshot=>{
+        if(!snapshot.exists()) return;
+
+        select.innerHTML = '<option value="">Select Size</option>';
+
+        const data = snapshot.val();
+
+        for(const key in data){
+            const option = document.createElement("option");
+            option.value = key;
+            option.text = key.replace('_',' ').toUpperCase();
+            select.appendChild(option);
+        }
+    });
+}
+function loadEggSizes(){
+    const select = document.getElementById("size");
+
+    db.ref("inventory").once("value").then(snapshot=>{
+        if(!snapshot.exists()) return;
+
+        select.innerHTML = '<option value="">Select Size</option>';
+
+        const data = snapshot.val();
+
+        for(const key in data){
+            const option = document.createElement("option");
+            option.value = key;
+            option.text = key.replace('_',' ').toUpperCase();
+            select.appendChild(option);
+        }
+    });
+}
+
+loadEggSizes(); 
 </script>
 </body>
 </html>
