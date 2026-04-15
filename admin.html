@@ -14,9 +14,10 @@
 
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Gikuha ang colors gikan sa Welcome Page */
+            --primary: #fbbf24; 
+            --primary-dark: #d97706;
+            --sidebar: #1e293b;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --error: #ef4444;
@@ -27,7 +28,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent; /* Mobiles: removes grey box on tap */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -35,67 +36,79 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-gradient);
-            padding: 15px; /* Smaller padding for mobile */
+            overflow: hidden; /* Prevent scroll tungod sa background scale */
+            position: relative;
+            padding: 15px;
+        }
+
+        /* --- Fullscreen Background (Same sa Welcome Page) --- */
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('logo.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(4px);
+            transform: scale(1.1);
         }
 
         .login-card {
             width: 100%;
-            max-width: 420px;
-            background: #ffffff;
-            padding: 40px 25px; /* Slightly tighter for mobile */
-            border-radius: 20px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95); /* Semi-transparent white */
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
-            animation: slideUp 0.5s ease-out;
-        }
-
-        /* Responsive adjustments for very small phones */
-        @media (max-width: 375px) {
-            .login-card {
-                padding: 30px 20px;
-            }
-            h2 { font-size: 1.5rem; }
+            animation: slideUp 0.6s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .brand-icon {
-            width: 60px;
-            height: 60px;
-            background: #fef3c7;
-            border-radius: 15px;
+            width: 70px;
+            height: 70px;
+            background: var(--primary);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 15px;
-            color: #d97706;
-            font-size: 1.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 0 auto 20px;
+            color: var(--sidebar);
+            font-size: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.4);
         }
 
         h2 {
             color: var(--text-main);
-            font-weight: 700;
-            font-size: 1.75rem;
-            margin-bottom: 8px;
+            font-weight: 800;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 25px;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
         }
 
         .input-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             text-align: left;
         }
 
         .input-group label {
             display: block;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-main);
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .input-wrapper {
@@ -107,89 +120,94 @@
         .input-wrapper i.fa-envelope, 
         .input-wrapper i.fa-lock {
             position: absolute;
-            left: 14px;
+            left: 16px;
             color: var(--text-muted);
-            font-size: 1rem;
         }
 
         .input-wrapper input {
             width: 100%;
-            /* Increase padding for easier tapping */
-            padding: 14px 14px 14px 42px; 
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px; /* Smoother corners */
+            padding: 14px 16px 14px 48px; 
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
             outline: none;
-            font-size: 16px; /* Important: prevents auto-zoom on iOS */
-            transition: all 0.2s;
-            background: #f8fafc;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #ffffff;
         }
 
         .input-wrapper input:focus {
             border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
         }
 
         .toggle-pass {
             position: absolute;
-            right: 14px;
-            padding: 10px; /* Bigger hit area for mobile */
+            right: 16px;
             cursor: pointer;
             color: var(--text-muted);
-            font-size: 1rem;
+            padding: 5px;
         }
 
         button {
             width: 100%;
-            padding: 16px; /* Larger button for thumbs */
+            padding: 16px;
             border: none;
-            border-radius: 12px;
-            background: var(--primary);
-            color: white;
+            border-radius: 14px;
+            background: var(--sidebar); /* Dark background for contrast */
+            color: var(--primary); /* Yellow text */
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
         button:active { 
-            transform: scale(0.98); /* Visual feedback on touch */
+            transform: scale(0.98);
         }
 
         .error-box {
-            background: #fef2f2;
+            background: #fff1f2;
             color: var(--error);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             font-size: 0.85rem;
-            margin-top: 15px;
+            margin-top: 20px;
             display: none;
-            border: 1px solid #fee2e2;
+            border: 1px solid #fecdd3;
+            font-weight: 500;
         }
 
         .footer {
-            margin-top: 25px;
+            margin-top: 30px;
             font-size: 0.75rem;
             color: var(--text-muted);
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid #e2e8f0;
             padding-top: 20px;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .spinner {
             display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--primary);
             border-bottom-color: transparent;
             border-radius: 50%;
             animation: rotation 1s linear infinite;
@@ -203,9 +221,11 @@
 </head>
 <body>
 
+<div class="bg-container"></div>
+
 <div class="login-card">
     <div class="brand-icon">
-        <i class="fas fa-shield-halved"></i>
+        <i class="fas fa-user-shield"></i>
     </div>
 
     <h2>Admin Portal</h2>
@@ -215,7 +235,7 @@
         <label>Administrator Email</label>
         <div class="input-wrapper">
             <i class="fas fa-envelope"></i>
-            <input type="email" id="email" placeholder="Email" inputmode="email">
+            <input type="email" id="email" placeholder="admin@bakafa.com" inputmode="email">
         </div>
     </div>
 
@@ -223,13 +243,13 @@
         <label>Security Password</label>
         <div class="input-wrapper">
             <i class="fas fa-lock"></i>
-            <input type="password" id="password" placeholder="Password">
+            <input type="password" id="password" placeholder="••••••••">
             <i class="fas fa-eye toggle-pass" onclick="togglePassword()" id="eye-icon"></i>
         </div>
     </div>
 
     <button id="loginBtn" onclick="login()">
-        <span id="btnText">Log In to Dashboard</span>
+        <span id="btnText">Verify & Access</span>
         <div class="spinner" id="loader"></div>
     </button>
 
@@ -241,7 +261,7 @@
 </div>
 
 <script>
-// --- Ang imong original nga script nagpabilin, walay nausab sa logic ---
+// Firebase Config & Logic (Nagpabilin ang imong original logic)
 const firebaseConfig = {
   apiKey: "AIzaSyABsyqTPCwlTuC7WLBmtXo7HgZjfxRHU7M",
   authDomain: "egg-inventory-system-10c0b.firebaseapp.com",
@@ -282,7 +302,7 @@ function login(){
         return;
     }
 
-    btnText.innerText = "Authenticating...";
+    btnText.innerText = "Verifying...";
     loader.style.display = "block";
 
     auth.signInWithEmailAndPassword(email, password)
@@ -294,13 +314,13 @@ function login(){
         if(snapshot.exists() && snapshot.val().usertype === "admin") {
             window.location = "admin-dashboard.html";
         } else {
-            showError("Access Denied: You do not have admin privileges.");
+            showError("Access Denied: Admin privileges required.");
             auth.signOut();
             resetButton();
         }
     })
     .catch((err) => {
-        showError("Invalid credentials. Please try again.");
+        showError("Invalid administrator credentials.");
         resetButton();
     });
 }
@@ -312,11 +332,10 @@ function showError(msg) {
 }
 
 function resetButton() {
-    document.getElementById("btnText").innerText = "Log In to Dashboard";
+    document.getElementById("btnText").innerText = "Verify & Access";
     document.getElementById("loader").style.display = "none";
 }
 </script>
 
 </body>
-
 </html>
