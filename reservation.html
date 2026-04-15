@@ -144,21 +144,22 @@
         <div class="card">
             <div class="section-title"><i class="fas fa-shopping-basket"></i> Order Details</div>
 
-            <div class="input-group">
-                <label>Customer Name</label>
-                <div class="field-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="name" placeholder="Name">
-                </div>
-            </div>
+           <div class="input-group">
+    <label>Customer Name <span style="color: #ef4444;">*</span></label>
+    <div class="field-wrapper">
+        <i class="fas fa-user"></i>
+        <input type="text" id="name" placeholder="EX: Juan Dela Cruz">
+    </div>
+</div>
 
             <div class="input-group">
-                <label>Contact Number</label>
-                <div class="field-wrapper">
-                    <i class="fas fa-phone"></i>
-                    <input type="text" id="contact" placeholder="Mobile Number">
-                </div>
-            </div>
+    <label>Contact Number <span style="color: #ef4444;">*</span></label>
+    <div class="field-wrapper">
+        <span style="position: absolute; left: 42px; font-size: 0.95rem; font-weight: 500; color: var(--text-dark);">+63</span>
+        <i class="fas fa-phone"></i>
+        <input type="text" id="contact" placeholder="9123456789" maxlength="10" style="padding-left: 75px;">
+    </div>
+</div>
 
             <div class="input-group">
                 <label>Order Type</label>
@@ -182,12 +183,15 @@
             </div>
 
             <div class="input-group">
-                <label id="unit-label">Quantity (Trays)</label> 
-                <div class="field-wrapper">
-                    <i class="fas fa-hashtag"></i>
-                    <input type="number" id="tray-count" min="0.5" step="0.5" placeholder="Quantity">
-                </div>
-            </div>
+    <label id="unit-label">Quantity (Trays) <span style="color: #ef4444;">*</span></label> 
+    <div class="field-wrapper">
+        <i class="fas fa-hashtag"></i>
+        <input type="number" id="tray-count" min="0.5" step="0.5" placeholder="Quantity">
+    </div>
+    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; font-style: italic;">
+        Ex: Half Tray - type "0.5" | One and Half Tray - type "1.5"
+    </p>
+</div>
 
             <div class="price-box">
                 <div>
@@ -258,8 +262,10 @@ function loadInventory() {
             for (const key in inventoryData) {
                 const option = document.createElement('option');
                 option.value = key;
-                const unit = key.toLowerCase().includes('cracked') ? 'pc' : 'tray';
-                option.text = `${key.replace('_',' ').toUpperCase()} (₱${inventoryData[key].price}/${unit})`;
+                
+                // Gikuha nato ang /unit para egg size ug presyo nalang ang makita
+                option.text = `${key.replace('_',' ').toUpperCase()} - ₱${inventoryData[key].price}`;
+                
                 eggSelect.appendChild(option);
             }
         }
@@ -271,13 +277,16 @@ function toggleLocationSection() {
     const type = document.getElementById('order-type').value;
     const locationSection = document.getElementById('location-section');
     const dateLabel = document.getElementById('date-label');
-    
+    const typeIcon = document.querySelector('.fa-truck'); // The icon in the Order Type field
+
     if (type === 'pickup') {
-        locationSection.classList.add('hidden'); // I-hide ang address box
+        locationSection.classList.add('hidden');
         dateLabel.innerText = "Preferred Pick-up Date";
+        typeIcon.className = "fas fa-store"; // Change to Store icon
     } else {
-        locationSection.classList.remove('hidden'); // I-pakita ang address box
+        locationSection.classList.remove('hidden');
         dateLabel.innerText = "Preferred Delivery Date";
+        typeIcon.className = "fas fa-truck"; // Change to Truck icon
     }
 }
 
@@ -302,21 +311,39 @@ function reserveEggs() {
     const schedule = document.getElementById('delivery-schedule').value;
     const manualAddress = document.getElementById('manual-address').value.trim();
 
-    // 1. Validation
+    // Reset error message
+    errorEl.style.display = "none";
+
+    // 1. Basic Completion Validation
     if (!name || !contact || !size || trays <= 0 || !schedule) {
         errorEl.innerText = "⚠️ Please complete the order details.";
         errorEl.style.display = "block";
         return;
     }
 
-    // Validation para sa Delivery Address
+    // 2. Contact Number Validation (Strictly 10 digits)
+    if (contact.length !== 10 || isNaN(contact)) {
+        errorEl.innerText = "⚠️ Contact number must be exactly 10 digits (after +63).";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    // 3. Tray Quantity Validation (.5 decimal rule)
+    // Checks if the number is NOT a multiple of 0.5
+    if ((trays * 10) % 5 !== 0) {
+        errorEl.innerText = "⚠️ Quantity must be whole numbers or in .5 increments (e.g., 0.5, 1.5).";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    // 4. Delivery Address Validation
     if (orderType === 'delivery' && !manualAddress) {
         errorEl.innerText = "⚠️ Please enter your delivery address.";
         errorEl.style.display = "block";
         return;
     }
 
-    // 2. Sequence Number Logic
+    // 5. Firebase Transaction and Save Logic
     database.ref('reservation_id/last_reservation_id').transaction((currentCount) => {
         return (currentCount || 0) + 1;
     }, (error, committed, snapshot) => {
@@ -331,7 +358,7 @@ function reserveEggs() {
             const reservationData = {
                 reservation_id: customUID,
                 name: name,
-                contact: contact,
+                contact: "+63" + contact, // Saves with the prefix for records
                 order_type: orderType,
                 size: size,
                 trays: trays,
@@ -343,7 +370,7 @@ function reserveEggs() {
             };
 
             database.ref(`reservation/${date}/${time}`).push(reservationData).then(() => {
-                alert(`Reservation successful! Order ID: ${customUID}`);
+                alert(`Reservation successful!\nOrder ID: ${customUID}`);
                 location.reload();
             }).catch(err => {
                 errorEl.innerText = err.message;

@@ -427,9 +427,19 @@ font-size:14px;
 </button>
 
         <div class="toolbar">
-            <div style="width: 100%;">
-                <input type="date" id="date-filter">
-            </div>
+           <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 5px;">
+    <div style="flex: 1;">
+        <label style="font-size: 0.65rem; color: var(--secondary); display: block;">From:</label>
+        <input type="date" id="date-from">
+    </div>
+    <div style="flex: 1;">
+        <label style="font-size: 0.65rem; color: var(--secondary); display: block;">To:</label>
+        <input type="date" id="date-to">
+    </div>
+</div>
+
+
+
             <div class="search-wrapper">
                 <i class="fas fa-search"></i>
                 <input type="text" id="search" placeholder="Search customer...">
@@ -471,7 +481,7 @@ font-size:14px;
 
 
     
-    <!-- IBUTANG DINHI DAPIT (SA PAWANG SA BODY) -->
+
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-content">
             <h3>Update Password</h3>
@@ -574,51 +584,58 @@ font-size:14px;
     });
 }
 
-        function renderTable(){
-            const body=document.getElementById("table-body");
-            const search=document.getElementById("search").value.toLowerCase();
-            const filter=document.getElementById("filter").value;
-            const dateFilter = document.getElementById("date-filter").value;
-            body.innerHTML="";
+        function renderTable() {
+    const body = document.getElementById("table-body");
+    const search = document.getElementById("search").value.toLowerCase();
+    const filter = document.getElementById("filter").value;
+    
+    // Get both dates
+    const dateFrom = document.getElementById("date-from").value;
+    const dateTo = document.getElementById("date-to").value;
+    
+    body.innerHTML = "";
 
-            reservations.forEach(r => {
-    if (dateFilter && r.date !== dateFilter) return;
-    if (filter !== "all" && r.status !== filter) return;
-    if (!r.name.toLowerCase().includes(search)) return;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td data-label="Customer Name"><strong>${r.name}</strong></td>
-        <td data-label="Contact Number">${r.contact}</td>
-        <td data-label="Order Type">${r.order_type}</td>
-        <td data-label="Delivery/Pick Up Date">${r.schedule_date}</td>
-         <td data-label="Delivery/Pick Up Date">${r.address}</td>
-        <td data-label="Egg Type/Size">${r.size.replace('_', ' ')}</td>
-        <td data-label="Quantity">${r.trays}</td>
-        <td data-label="Total Price">₱${r.total_price.toLocaleString()}</td>
-        <td data-label="Status"><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
-       <td data-label="Delivery Status">
-    <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)">
-        ${r.order_type === 'pickup' ? `
-            <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
-            <option value="Picked Up" ${r.delivery_status === "Pickedup" ? "selected" : ""}>Picked Up</option>
-        ` : `
-            <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
-            <option value="Out for Delivery" ${r.delivery_status === "Out for Delivery" ? "selected" : ""}>Out</option>
-            <option value="Delivered" ${r.delivery_status === "Delivered" ? "selected" : ""}>Delivered</option>
-        `}
-    </select>
-</td>
-        <td data-label="Processed By"><small>${r.processed_by || '---'}</small></td>
-        <td class="action-btns">
+    reservations.forEach(r => {
+        // 1. Range Filtering Logic
+        if (dateFrom && r.date < dateFrom) return;
+        if (dateTo && r.date > dateTo) return;
         
-            <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})"><i class="fas fa-check"></i></button>
-            <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')"><i class="fas fa-trash"></i></button>
-        </td>
-    `;
-    body.appendChild(row);
-});
-        }
+        // 2. Status and Search Filtering
+        if (filter !== "all" && r.status !== filter) return;
+        if (!r.name.toLowerCase().includes(search)) return;
+
+        // 3. Create Row
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td data-label="Customer Name"><strong>${r.name}</strong></td>
+            <td data-label="Contact Number">${r.contact}</td>
+            <td data-label="Order Type">${r.order_type}</td>
+            <td data-label="Delivery/Pick Up Date">${r.schedule_date}</td>
+            <td data-label="Address">${r.address}</td>
+            <td data-label="Egg Type/Size">${r.size.replace('_', ' ')}</td>
+            <td data-label="Quantity">${r.trays}</td>
+            <td data-label="Total Price">₱${r.total_price.toLocaleString()}</td>
+            <td data-label="Status"><span class="badge bg-${r.status.toLowerCase()}">${r.status}</span></td>
+            <td data-label="Delivery Status">
+                <select onchange="updateDeliveryStatus('${r.date}','${r.time}','${r.uid}',this.value)">
+                    ${r.order_type === 'pickup' ? `
+                        <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
+                        <option value="Picked Up" ${r.delivery_status === "Picked Up" ? "selected" : ""}>Picked Up</option>
+                    ` : `
+                        <option value="Pending" ${r.delivery_status === "Pending" ? "selected" : ""}>Pending</option>
+                        <option value="Delivered" ${r.delivery_status === "Delivered" ? "selected" : ""}>Delivered</option>
+                    `}
+                </select>
+            </td>
+            <td data-label="Processed By"><small>${r.processed_by || '---'}</small></td>
+            <td class="action-btns">
+                <button class="btn-approve" onclick="approve('${r.date}','${r.time}','${r.uid}','${r.size}',${r.trays})"><i class="fas fa-check"></i></button>
+                <button class="btn-reject" onclick="reject('${r.date}','${r.time}','${r.uid}')"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        body.appendChild(row);
+    });
+}
 
 
 function approve(date, time, uid, size, quantity) {
@@ -672,42 +689,81 @@ function approve(date, time, uid, size, quantity) {
         function viewMap(lat,lng){ window.open(`https://www.google.com/maps?q=${lat},${lng}`); }
         function logout(){ auth.signOut().then(()=>window.location="admin.html"); }
 
-        document.getElementById("search").addEventListener("input",renderTable);
-        document.getElementById("filter").addEventListener("change",renderTable);
-        document.getElementById("date-filter").addEventListener("change", renderTable);
-        document.getElementById("date-display").innerText = new Date().toDateString();
-        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+      // --- MGA EVENT LISTENERS ---
+document.getElementById("search").addEventListener("input", renderTable);
+document.getElementById("filter").addEventListener("change", renderTable);
 
+// Bag-ong listeners para sa From ug To
+document.getElementById("date-from").addEventListener("change", renderTable);
+document.getElementById("date-to").addEventListener("change", renderTable);
+
+// I-set ang date display sa header
+document.getElementById("date-display").innerText = new Date().toDateString();
+
+// --- DEFAULT DATE VALUES ---
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('date-to').value = today; // I-set ang 'To' sa date karon
+
+// I-set ang 'From' sa pagsugod sa bulan para naay makita dayon nga data
+const startOfMonth = new Date();
+startOfMonth.setDate(1); 
+document.getElementById('date-from').value = startOfMonth.toISOString().split('T')[0];
 
 
 
 
 function generateExcel() {
-    const table = document.querySelector("table");
-    // We create a clean data array for Excel (excluding the Actions column)
-    const data = reservations.map(r => ({
-     
+    // 1. Kuhaon ang filter values
+    const search = document.getElementById("search").value.toLowerCase();
+    const filter = document.getElementById("filter").value;
+    const dateFrom = document.getElementById("date-from").value;
+    const dateTo = document.getElementById("date-to").value;
+
+    // 2. I-filter ang reservations base sa unsay gi-set sa user
+    const filteredReservations = reservations.filter(r => {
+        // Date Range Filter
+        if (dateFrom && r.date < dateFrom) return false;
+        if (dateTo && r.date > dateTo) return false;
+        
+        // Status Filter
+        if (filter !== "all" && r.status !== filter) return false;
+        
+        // Search Filter
+        if (!r.name.toLowerCase().includes(search)) return false;
+
+        return true;
+    });
+
+    // 3. I-check kung naay sulod ang filtered data
+    if (filteredReservations.length === 0) {
+        alert("Walay data nga ma-export base sa imong filter.");
+        return;
+    }
+
+    // 4. I-map ang filtered data para sa Excel
+    const data = filteredReservations.map(r => ({
         "Customer Name": r.name,
-        "Contact Number":r.contact,
-         "Reservation Date": r.date,
-         "Picked-Up/Delivery Date":r.schedule_date,
+        "Contact Number": r.contact,
+        "Address": r.address,
+        "Delivery Status": r.delivery_status,
+        "Reservation Date": r.date,
+        "Picked-Up/Delivery Date": r.schedule_date,
         "Egg Type": r.size,
         "Quantity": r.trays,
-        "Price":r.price_per_tray,
+        "Price": r.price_per_tray,
         "Total Price": r.total_price,
-        "Status":r.status,
+        "Status": r.status,
         "Processed By": r.processed_by || "N/A"
-
-
-
     }));
 
+    // 5. Paghimo sa Excel File
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Reservations");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Reservations");
     
-    // Download file
-    XLSX.writeFile(workbook, `Bakafa_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    // Download file (naay suffix kung unsa nga date range ang gi-export)
+    const fileName = `Bakafa_Report_${dateFrom || 'Start'}_to_${dateTo || 'End'}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
 }
 
 function highlightMenu() {
