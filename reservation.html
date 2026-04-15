@@ -182,17 +182,24 @@
                 </div>
             </div>
 
-            <div class="input-group">
-    <label id="unit-label">Quantity (Trays) <span style="color: #ef4444;">*</span></label> 
-    <div class="field-wrapper">
-        <i class="fas fa-hashtag"></i>
-        <input type="number" id="tray-count" min="0.5" step="0.5" placeholder="Quantity">
+<div class="input-group">
+    <label>Order Quantity & Availability <span style="color: #ef4444;">*</span></label>
+    <div style="display: flex; gap: 10px;">
+        <div class="field-wrapper" style="flex: 1;">
+            <i class="fas fa-hashtag"></i>
+            <input type="number" id="tray-count" min="0.5" step="0.5" placeholder="Qty">
+        </div>
+        
+        <div class="field-wrapper" style="flex: 1;">
+            <i class="fas fa-layer-group"></i>
+            <input type="text" id="stock-display-box" readonly placeholder="Available" 
+                   style="background-color: #f1f5f9; color: var(--primary); font-weight: 700; border-style: dashed;">
+        </div>
     </div>
     <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; font-style: italic;">
         Ex: Half Tray - type "0.5" | One and Half Tray - type "1.5"
     </p>
 </div>
-
             <div class="price-box">
                 <div>
                     <p>UNIT PRICE</p>
@@ -263,7 +270,7 @@ function loadInventory() {
                 const option = document.createElement('option');
                 option.value = key;
                 
-                // Gikuha nato ang /unit para egg size ug presyo nalang ang makita
+               
                 option.text = `${key.replace('_',' ').toUpperCase()} - ₱${inventoryData[key].price}`;
                 
                 eggSelect.appendChild(option);
@@ -272,7 +279,7 @@ function loadInventory() {
     });
 }
 
-// MAO KINI ANG MO-TAGO SA ADDRESS BOX
+
 function toggleLocationSection() {
     const type = document.getElementById('order-type').value;
     const locationSection = document.getElementById('location-section');
@@ -295,12 +302,28 @@ document.getElementById('tray-count').addEventListener('input', calculatePrice);
 
 function calculatePrice() {
     const size = document.getElementById('egg-size').value;
-   const trays = parseFloat(document.getElementById('tray-count').value) || 0;
-    let pricePerTray = (size && inventoryData[size]) ? inventoryData[size].price : 0;
-    document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
-    document.getElementById('total-price').innerText = `₱${trays * pricePerTray}`;
-}
+    const trays = parseFloat(document.getElementById('tray-count').value) || 0;
+    const stockBox = document.getElementById('stock-display-box'); // Ang bag-ong box
+    
+    let pricePerTray = 0;
 
+    if (size && inventoryData[size]) {
+        pricePerTray = inventoryData[size].price || 0;
+        const availablePieces = inventoryData[size].quantity || 0;
+        const availableTrays = (availablePieces / 30).toFixed(1);
+        
+        // I-set ang text sa sulod sa box
+        stockBox.value = `${availablePieces} Pcs (${availableTrays} Trays)`;
+        
+        // Usbon ang text color kung hapit na mahurot
+        stockBox.style.color = availablePieces < 30 ? "#ef4444" : "#4f46e5";
+    } else {
+        stockBox.value = ""; // Clear box kung wala pay napili nga size
+    }
+
+    document.getElementById('price-per-tray').innerText = `₱${pricePerTray}`;
+    document.getElementById('total-price').innerText = `₱${(trays * pricePerTray).toLocaleString()}`;
+}
 function reserveEggs() {
     const errorEl = document.getElementById('error');
     const name = document.getElementById('name').value.trim();

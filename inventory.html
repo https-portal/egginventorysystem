@@ -307,26 +307,47 @@ font-size:14px;
     function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
     function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
 
-    document.getElementById('editForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const key = document.getElementById('edit-key').value;
-        const newPrice = parseFloat(document.getElementById('edit-price').value);
-        const adjQty = parseInt(document.getElementById('adj-qty').value) || 0;
-        const adjType = document.getElementById('adj-type').value;
+// --- Mao ni ang updated nga Edit Form Logic ---
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const key = document.getElementById('edit-key').value;
+    const newPrice = parseFloat(document.getElementById('edit-price').value);
+    const adjQty = parseInt(document.getElementById('adj-qty').value) || 0;
+    const adjType = document.getElementById('adj-type').value;
+    
+    // Kuhaon ang local date (YYYY-MM-DD)
+    const now = new Date();
+    const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-        const ref = db.ref(`inventory/${key}`);
-        ref.once('value').then(snap => {
-            const currentQty = snap.val().quantity || 0;
-            let finalQty = (adjType === 'add') ? currentQty + adjQty : currentQty - adjQty;
-            
-            return ref.update({
-                price: newPrice,
-                quantity: Math.max(0, finalQty)
-            });
-        }).then(() => {
-            closeEdit();
+    const ref = db.ref(`inventory/${key}`);
+    
+    ref.once('value').then(snap => {
+        const currentQty = snap.val().quantity || 0;
+        let finalQty = (adjType === 'add') ? currentQty + adjQty : currentQty - adjQty;
+        
+        // 1. Update sa Inventory (Price ug Quantity)
+        return ref.update({
+            price: newPrice,
+            quantity: Math.max(0, finalQty)
         });
-    });
+    }).then(() => {
+        // 2. Save Adjustment History (Kung naay gi-adjust nga quantity)
+        if (adjQty > 0) {
+            // Mogamit tag .push() para dili ma-overwrite ang history kung ka-duha mo adjust sa usa ka adlaw
+            const adjRef = db.ref(`adjustments/${today}/${key}`).push(); 
+            return adjRef.set({
+                quantity: adjQty,
+                type: adjType, // 'add' or 'sub'
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+    }).then(() => {
+        alert("Inventory Updated and Logged!");
+        closeEdit();
+    }).catch(err => alert("Error: " + err.message));
+});
+
+
 
 async function viewHistory(size) {
     const historyContainer = document.getElementById('history-container');
@@ -336,25 +357,21 @@ async function viewHistory(size) {
 
     let historyData = [];
     
-    // 1. PRODUCTION LOGS (Kani ang per piece na)
+    // 1. KUHAON ANG PRODUCTION LOGS
     const prodSnap = await db.ref("production").once("value");
     if (prodSnap.exists()) {
         const data = prodSnap.val();
         for (const date in data) {
             if (data[date][size]) {
-               
                 historyData.push({ 
-                    date, 
-                    qty: data[date][size].quantity, 
-                    type: 'Production', 
-                    class: 'type-add', 
-                    prefix: '+' 
+                    date, type: 'Production', qty: data[date][size].quantity, 
+                    class: 'type-add', prefix: '+' 
                 });
             }
         }
     }
 
-    // 2. RESERVATION/SALES LOGS (Kani trays gihapon ang input sa user)
+    // 2. KUHAON ANG SALES/RESERVATION LOGS
     const resSnap = await db.ref("reservation").once("value");
     if (resSnap.exists()) {
         const data = resSnap.val();
@@ -363,15 +380,10 @@ async function viewHistory(size) {
                 for (const uid in data[date][time]) {
                     const r = data[date][time][uid];
                     if (r.status === "Approved" && r.size === size) {
-             
                         let deducted = (size === "cracked") ? r.trays : r.trays * 30;
-                        
                         historyData.push({ 
-                            date, 
-                            qty: deducted, 
-                            type: `Sold: ${r.name}`, 
-                            class: 'type-sub', 
-                            prefix: '-' 
+                            date, type: `Sold: ${r.name}`, qty: deducted, 
+                            class: 'type-sub', prefix: '-' 
                         });
                     }
                 }
@@ -379,18 +391,43 @@ async function viewHistory(size) {
         }
     }
 
-    // Sorting and Displaying
+    // 3. KUHAON ANG ADJUSTMENTS (MANUAL EDITS) - KINI ANG BAG-O
+    const adjSnap = await db.ref("adjustments").once("value");
+    if (adjSnap.exists()) {
+        const data = adjSnap.val();
+        for (const date in data) {
+            if (data[date][size]) {
+                for (const id in data[date][size]) {
+                    const adj = data[date][size][id];
+                    historyData.push({ 
+                        date, 
+                        type: 'Manual Adjustment', 
+                        qty: adj.quantity, 
+                        class: adj.type === 'add' ? 'type-add' : 'type-sub', 
+                        prefix: adj.type === 'add' ? '+' : '-' 
+                    });
+                }
+            }
+        }
+    }
+
+    // Sorting gikan sa pinaka-bag-o padung sa karaan
     historyData.sort((a, b) => new Date(b.date) - new Date(a.date));
     historyContainer.innerHTML = historyData.length > 0 ? "" : "No history found.";
     
     historyData.forEach(item => {
+        // I-set ang color: Green kung +, Red kung -
+        const color = item.prefix === '+' ? '#22c55e' : '#ef4444';
         historyContainer.innerHTML += `
-            <div class="history-item">
-                <span><strong>${item.date}</strong><br><small>${item.type}</small></span>
-                <span class="${item.class || ''}">${item.prefix}${item.qty} Pcs</span>
+            <div class="history-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0;">
+                <span><strong>${item.date}</strong><br><small style="color: #64748b;">${item.type}</small></span>
+                <span style="color: ${color}; font-weight: bold;">${item.prefix}${item.qty} Pcs</span>
             </div>`;
     });
 }
+
+
+
     function logout() { firebase.auth().signOut().then(() => window.location = "admin.html"); }
     loadInventory();
 

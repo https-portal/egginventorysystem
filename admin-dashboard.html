@@ -545,7 +545,7 @@ font-size:14px;
         function loadReservations(){
     db.ref("reservation").on("value", snapshot => {
         reservations = [];
-        // I-initialize ang pickedup variable diri
+        // I-initialize ang pickedup variable
         let total = 0, pending = 0, sales = 0, delivered = 0, pickedup = 0; 
 
         if(snapshot.exists()){
@@ -573,7 +573,7 @@ font-size:14px;
             }
         }
 
-        // I-display ang mga values sa HTML
+
         document.getElementById("total").innerText = total;
         document.getElementById("pending").innerText = pending;
         document.getElementById("delivered").innerText = delivered; 
@@ -689,22 +689,22 @@ function approve(date, time, uid, size, quantity) {
         function viewMap(lat,lng){ window.open(`https://www.google.com/maps?q=${lat},${lng}`); }
         function logout(){ auth.signOut().then(()=>window.location="admin.html"); }
 
-      // --- MGA EVENT LISTENERS ---
+    -
 document.getElementById("search").addEventListener("input", renderTable);
 document.getElementById("filter").addEventListener("change", renderTable);
 
-// Bag-ong listeners para sa From ug To
+
 document.getElementById("date-from").addEventListener("change", renderTable);
 document.getElementById("date-to").addEventListener("change", renderTable);
 
-// I-set ang date display sa header
+
 document.getElementById("date-display").innerText = new Date().toDateString();
 
 // --- DEFAULT DATE VALUES ---
 const today = new Date().toISOString().split('T')[0];
-document.getElementById('date-to').value = today; // I-set ang 'To' sa date karon
+document.getElementById('date-to').value = today; 
 
-// I-set ang 'From' sa pagsugod sa bulan para naay makita dayon nga data
+
 const startOfMonth = new Date();
 startOfMonth.setDate(1); 
 document.getElementById('date-from').value = startOfMonth.toISOString().split('T')[0];
@@ -713,13 +713,13 @@ document.getElementById('date-from').value = startOfMonth.toISOString().split('T
 
 
 function generateExcel() {
-    // 1. Kuhaon ang filter values
+    
     const search = document.getElementById("search").value.toLowerCase();
     const filter = document.getElementById("filter").value;
     const dateFrom = document.getElementById("date-from").value;
     const dateTo = document.getElementById("date-to").value;
 
-    // 2. I-filter ang reservations base sa unsay gi-set sa user
+   
     const filteredReservations = reservations.filter(r => {
         // Date Range Filter
         if (dateFrom && r.date < dateFrom) return false;
@@ -734,13 +734,13 @@ function generateExcel() {
         return true;
     });
 
-    // 3. I-check kung naay sulod ang filtered data
+    
     if (filteredReservations.length === 0) {
-        alert("Walay data nga ma-export base sa imong filter.");
+        alert("No data to export for the selected filters.");
         return;
     }
 
-    // 4. I-map ang filtered data para sa Excel
+    
     const data = filteredReservations.map(r => ({
         "Customer Name": r.name,
         "Contact Number": r.contact,
@@ -756,29 +756,29 @@ function generateExcel() {
         "Processed By": r.processed_by || "N/A"
     }));
 
-    // 5. Paghimo sa Excel File
+ 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Reservations");
     
-    // Download file (naay suffix kung unsa nga date range ang gi-export)
+
     const fileName = `Bakafa_Report_${dateFrom || 'Start'}_to_${dateTo || 'End'}.xlsx`;
     XLSX.writeFile(workbook, fileName);
 }
 
 function highlightMenu() {
-    // 1. Kuhaon ang filename gikan sa URL (e.g. "inventory.html")
+   
     const path = window.location.pathname;
     const page = path.split("/").pop() || "admin-dashboard.html"; // Default kung empty
 
-    // 2. Pangitaon tanang links sa sidebar
+    
     const menuLinks = document.querySelectorAll('.nav-link');
     
     menuLinks.forEach(link => {
-        // 3. Kuhaon ang "href" sa link (e.g. "inventory.html")
+        
         const href = link.getAttribute("href");
         
-        // 4. I-check kung nag-match ang page sa link
+      
         if (page === href) {
             link.classList.add("active");
         } else {
@@ -787,7 +787,7 @@ function highlightMenu() {
     });
 }
 
-// Siguroha nga mo-dagan ang function inig load sa page
+
 document.addEventListener("DOMContentLoaded", highlightMenu);
 
 
